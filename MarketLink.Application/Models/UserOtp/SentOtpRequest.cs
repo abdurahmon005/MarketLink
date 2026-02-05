@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace MarketLink.Application.Models.UserOtp
 {
-    public class OtpVerificationModel
+    public class SentOtpRequest
     {
-        public string Email { get; set; }
-        public string Code { get; set; }
-
+        public string PhoneNumber { get; set; } 
     }
 }

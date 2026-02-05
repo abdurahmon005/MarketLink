@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace MarketLink.Application.Models.UserOtp
 {
-    public class UserForgot
+    public class ResendOtpRequest
     {
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-
+        public string Email { get; set; }
     }
 }

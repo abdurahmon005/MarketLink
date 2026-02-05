@@ -16,4 +16,8 @@
     <ProjectReference Include="..\MarketLink.DataAccess\MarketLink.DataAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Validators\UserValidator\" />
+  </ItemGroup>
+
 </Project>

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
  
 
 namespace MarketLink.Application.Helpers.GenerateJWT
@@ -32,7 +31,6 @@ namespace MarketLink.Application.Helpers.GenerateJWT
             var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.FullName),
     };
 
             if (!string.IsNullOrWhiteSpace(user.Email))
@@ -40,12 +38,7 @@ namespace MarketLink.Application.Helpers.GenerateJWT
                 claims.Add(new Claim(ClaimTypes.Email, user.Email));
             }
 
-            if (!string.IsNullOrWhiteSpace(user.PhoneNumber))
-            {
-                claims.Add(new Claim(ClaimTypes.MobilePhone, user.PhoneNumber));
-            }
 
-           //token yaratish bu
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_jwtOption.SecretKey));
 
@@ -61,7 +54,5 @@ namespace MarketLink.Application.Helpers.GenerateJWT
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-
     }
 }

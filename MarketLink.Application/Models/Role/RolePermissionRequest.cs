@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MarketLink.Domain.Entities
+namespace MarketLink.Application.Models.Role
 {
-    public class RolePermission
+    public class RolePermissionRequest
     {
         public Guid RoleId { get; set; }
         public Guid PermissionId { get; set; }
-        public Role Role { get; set; }
-        public Permission Permission { get; set; }
-
     }
 }
