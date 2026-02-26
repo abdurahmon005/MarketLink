@@ -9,7 +9,7 @@ namespace MarketLink.Application.Models.Company
 {
     public class CompanyProfileResponse
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string FounderName { get; set; }
         public string CompanyName { get; set; }
         public string Address { get; set; }
@@ -17,5 +17,7 @@ namespace MarketLink.Application.Models.Company
         public string Description { get; set; }
         public string? LogoUrl { get; set; }
         public string? SertificateUrl { get; set; }
+        public double AvarageRaiting { get; set; }
+
     }
 }

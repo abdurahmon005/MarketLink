@@ -29,6 +29,7 @@ namespace MarketLink.Application.Service
         Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request);
         Task<(bool Success, string Message, TokenResponse? Response)> RefreshTokenAsync(RefreshTokenRequest request);
         Task<UserProfileResponse?> GetUserProfileAsync(Guid userId);
+        Task LogoutAsync(Guid userId);
     }
 
 }

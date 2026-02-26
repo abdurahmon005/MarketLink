@@ -1,31 +1,29 @@
-
-using MarketLink.API.Attributes;
-using MarketLink.Application.Service;
+ï»¿using MarketLink.Application.Service;
 using MarketLink.Application.Service.Impl;
 using MarketLink.DataAccess.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 namespace MarketLink.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-
-            //database connection
+          
             builder.Services.AddDbContext<AppDbContext>(options =>
-              options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            var jwtSettings = builder.Configuration.GetSection("Jwt");  
+            var secretKey = jwtSettings["SecretKey"];
 
-
-            //jwt auth
-            var jwtSettings = builder.Configuration.GetSection("Jwt");
-            var secretKey = jwtSettings["SecretKey"]!;
+            if (string.IsNullOrEmpty(secretKey))
+                throw new Exception("Jwt SecretKey topilmadi appsettings.json da");
 
             builder.Services.AddAuthentication(options =>
             {
@@ -42,37 +40,70 @@ namespace MarketLink.API
                     ValidAudience = jwtSettings["Audience"],
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(secretKey)),
                     ClockSkew = TimeSpan.Zero
                 };
             });
 
             builder.Services.AddAuthorization();
 
-
-            // ?? Application Services ???????????????????????????????
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IPermissionService, PermissionService>();
 
-            // ?? Controllers + Global ActionFilter ???????????????????
-            //builder.Services.AddControllers(options =>
-            //{
-            //    // PermissionActionFilter — barcha request-da PermissionAttribute tekshiradi
-            //    options.Filters.Add<PermissionActionFilter>();
-            //});
+            builder.Services.AddControllers();  
 
-            // Add services to the container.
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Market Link API",
+                    Version = "v1"
+                });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "Bearer token",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
+
+            builder.Services.AddCors(options =>
+                options.AddPolicy("AllowAll", p =>
+                    p.AllowAnyOrigin()
+                     .AllowAnyMethod()
+                     .AllowAnyHeader()));
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            using (var scope = app.Services.CreateScope())
+            {
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                await ctx.Database.EnsureCreatedAsync();
+                await DataSeeder.SeedAsync(ctx);
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -80,9 +111,10 @@ namespace MarketLink.API
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowAll");
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 

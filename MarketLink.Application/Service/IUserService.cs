@@ -1,5 +1,7 @@
 ﻿using MarketLink.Application.Models.User;
 using MarketLink.Application.Models.UserOtp;
+using MarketLink.Domain.Entities;
+using MarketLink.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +12,24 @@ namespace MarketLink.Application.Service
 {
     public interface IUserService
     {
-        Task<string> CreateUser(CreateUserModel userDto);
-        Task<UserResponseModel> GetByIdUser(Guid id);
-        Task<string> UpdateUser(UpdateUserModel userDto);
-        Task<string> DeleteByUser(Guid userId);
-        Task<LoginResponseModel> LoginAsync(LoginUserModel loginUser);
-        Task<string> VerifyOtpAsync(OtpVerificationModel model);
-        Task<string> DeleteMe();
+        Task<User> CreateUserAsync(string email, string password);
 
+        Task<User?> GetUserByEmailAsync(string email);
+
+        Task<User?> GetUserByIdAsync(Guid userId);
+
+        Task<UserProfileResponse?> GetUserProfileAsync(Guid userId);
+
+        Task<bool> ConfirmEmailAsync(Guid userId);
+
+        Task<bool> UpdatePasswordAsync(Guid userId, string newPasswordHash);
+
+        Task<bool> UpdateUserStatusAsync(Guid userId, UserStatus status);
+
+        Task SaveRefreshTokenAsync(Guid userId, string refreshToken, DateTime expiry);
+
+        Task ClearRefreshTokenAsync(Guid userId);
     }
+
 }
+

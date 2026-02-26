@@ -8,6 +8,6 @@ namespace MarketLink.Domain.Entities
 {
     public class Product
     {
-
+        public int Id { get; set; }
     }
 }

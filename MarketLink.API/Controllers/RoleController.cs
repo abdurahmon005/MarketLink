@@ -6,15 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MarketLink.API.Controllers
 {
-    [Route("api/[controlller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class RoleController : ControllerBase
     {
         private readonly IPermissionService _permissionService;
+        private readonly ILogger<RoleController> _logger;
 
-        public RoleController(IPermissionService permissionService)
+        public RoleController(
+            IPermissionService permissionService,
+            ILogger<RoleController> logger)
         {
             _permissionService = permissionService;
+            _logger = logger;
         }
 
         [RequirePermission("admin.read_all")]
@@ -26,10 +30,11 @@ namespace MarketLink.API.Controllers
             return Ok(new ApiResponse<object>
             {
                 Success = true,
-                Message = "Rollar olindi",
+                Message = "Rollar muvaffaqiyatli olindi",
                 Data = roles
             });
         }
+
         [RequirePermission("admin.approve")]
         [HttpPost("assign")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleRequest req)
@@ -39,24 +44,50 @@ namespace MarketLink.API.Controllers
                 {
                     Success = false,
                     Message = "Ma'lumotlar noto'g'ri",
-                    Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()
+                    Errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList()
                 });
 
-            var ok = await _permissionService.AssignRoleAsync(req.UserId, req.RoleId);
+            var result = await _permissionService.AssignRoleAsync(req.UserId, req.RoleId);
 
-            return ok ? Ok(new ApiResponse<object> { Success = true, Message = "Rol muvaffaqiyatli tasniflandi" })
-                : BadRequest(new ApiResponse<object> { Success = false, Message = "User yoki rol topilmadi" });
+            if (!result)
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "User yoki rol topilmadi"
+                });
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Rol muvaffaqiyatli biriktirildi"
+            });
         }
 
         [RequirePermission("admin.approve")]
         [HttpDelete("remove")]
-        public async Task<IActionResult> RemoveRole([FromQuery] Guid userId, [FromQuery] Guid roleId)
+        public async Task<IActionResult> RemoveRole(
+            [FromQuery] Guid userId,
+            [FromQuery] Guid roleId)
         {
-            var ok = await _permissionService.RemoveRoleAsync(userId, roleId);
+            var result = await _permissionService.RemoveRoleAsync(userId, roleId);
 
-            return ok ? Ok(new ApiResponse<object> { Success = true, Message = "Rol o'chirildi" })
-                : NotFound(new ApiResponse<object> { Success = false, Message = "Rol tasniflash topilmadi" });
+            if (!result)
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Rol biriktirish topilmadi"
+                });
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Rol muvaffaqiyatli o‘chirildi"
+            });
         }
+
         [RequirePermission("admin.approve")]
         [HttpPost("permissions/add")]
         public async Task<IActionResult> AddPermission([FromBody] RolePermissionRequest req)
@@ -66,25 +97,48 @@ namespace MarketLink.API.Controllers
                 {
                     Success = false,
                     Message = "Ma'lumotlar noto'g'ri",
-                    Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()
+                    Errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList()
                 });
 
-            var ok = await _permissionService.AddPermissionToRoleAsync(req.RoleId, req.PermissionId);
+            var result = await _permissionService.AddPermissionToRoleAsync(req.RoleId, req.PermissionId);
 
-            return ok
-                ? Ok(new ApiResponse<object> { Success = true, Message = "Permission qo'shildi" })
-                : BadRequest(new ApiResponse<object> { Success = false, Message = "Rol yoki permission topilmadi" });
+            if (!result)
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Rol yoki permission topilmadi"
+                });
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Permission muvaffaqiyatli qo‘shildi"
+            });
         }
 
         [RequirePermission("admin.approve")]
         [HttpDelete("permissions/remove")]
-        public async Task<IActionResult> RemovePermission([FromQuery] Guid roleId, [FromQuery] Guid permissionId)
+        public async Task<IActionResult> RemovePermission(
+            [FromQuery] Guid roleId,
+            [FromQuery] Guid permissionId)
         {
-            var ok = await _permissionService.RemovePermissionFromRoleAsync(roleId, permissionId);
+            var result = await _permissionService.RemovePermissionFromRoleAsync(roleId, permissionId);
 
-            return ok
-                ? Ok(new ApiResponse<object> { Success = true, Message = "Permission o'chirildi" })
-                : NotFound(new ApiResponse<object> { Success = false, Message = "Permission topilmadi" });
+            if (!result)
+                return NotFound(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Permission topilmadi"
+                });
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Permission muvaffaqiyatli o‘chirildi"
+            });
         }
     }
 }
