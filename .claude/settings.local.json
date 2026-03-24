@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.API\" && dotnet build 2>&1 | head -80)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.API\" && dotnet build 2>&1 | grep -E \"error|Error\" | head -40)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.API\" && dotnet build 2>&1 | grep -E \"^.*error\" | head -30)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.API\" && dotnet build 2>&1 | tail -5)",
+      "Bash(find \"D:/C# dasturlash tili/MarketLink.API/src\" -type f -name \"*.cs\" | grep -v \"/obj/\" | xargs grep -l -i \"file\\\\|minio\\\\|storage\\\\|upload\" 2>/dev/null)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.Application\" && dotnet add package Minio --version 6.0.2 2>&1)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.API\" && dotnet build 2>&1 | grep -E \"error|Error|warning.*error\" | grep -v \"^info\" | head -20)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.API\" && dotnet build -c Release 2>&1 | grep -E \"^.*error CS|Ошибок|Build succeeded\" | head -20)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet tool:*)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | tail -30)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep -E \"error|warning CS\" | head -50)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep \": error CS\" | head -50)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | tail -10)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep -E \"^Build|Ошибок:|Предупреждений:|error CS\")",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep \"warning MSB3277\" | head -5)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet restore src/MarketLink.API 2>&1 | tail -5)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep -E \"Ошибок:|Предупреждений:|MSB3277\")",
+      "WebFetch(domain:documenter.getpostman.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:packagist.org)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep -E \"Ошибок:|error CS\")",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep -E \"error CS|Ошибок:\")",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep \"error CS\")",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API 2>&1 | grep \": error\")",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.Domain 2>&1 | tail -3 && dotnet build src/MarketLink.DataAccess 2>&1 | tail -3)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.Application\" && dotnet add package StackExchange.Redis --version 2.8.16)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src\" && dotnet build --no-restore 2>&1 | tail -20)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | tail -20)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | tail -5)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.Application\" && dotnet remove package StackExchange.Redis)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | grep -E \"error|warning CS\" | grep -v \"warning CS8\" | head -20)"
+    ]
+  }
+}

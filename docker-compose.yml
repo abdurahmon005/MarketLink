@@ -1,0 +1,95 @@
+version: '3.9'
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketlink-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       MarketLinkDb
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: yourpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - marketlink-net
+
+  # ── MinIO ───────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: marketlink-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:     minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web Console (http://localhost:9001)
+    volumes:
+      - minio_data:/data
+    networks:
+      - marketlink-net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ── MinIO Bucket Setup (bir martalik) ───────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: marketlink-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb --ignore-existing local/marketlink-public &&
+        mc mb --ignore-existing local/marketlink-private &&
+        mc anonymous set public local/marketlink-public &&
+        echo 'MinIO bucketlar tayyor';
+      "
+    networks:
+      - marketlink-net
+
+  # ── API ─────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./src
+      dockerfile: MarketLink.API/Dockerfile
+    container_name: marketlink-api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - minio
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=MarketLinkDb;Username=postgres;Password=yourpassword"
+      Jwt__SecretKey:   "MarketLink_SuperSecretKey_Min32Chars_ChangeThis!"
+      Jwt__Issuer:      "MarketLink"
+      Jwt__Audience:    "MarketLink"
+      Minio__Endpoint:  "minio:9000"
+      Minio__AccessKey: "minioadmin"
+      Minio__SecretKey: "minioadmin"
+      Minio__UseSSL:    "false"
+      Minio__PublicBucket:  "marketlink-public"
+      Minio__PrivateBucket: "marketlink-private"
+      Minio__PublicBaseUrl: "http://localhost:9000"
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5000:8080"
+    networks:
+      - marketlink-net
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  marketlink-net:
+    driver: bridge

@@ -1,0 +1,29 @@
+﻿using MarketLink.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MarketLink.Domain.Entities
+{
+    public class Company
+    {
+        public int Id { get; set; }
+        public Guid UserId { get; set; }
+        public string FounderName { get; set; }
+        public string CompanyName { get; set; }
+        public string Address { get; set; } = string.Empty;
+        public CompanyDirection ProductionType { get; set; }
+        public string Description { get; set; }
+        public string? LogoUrl { get; set; }
+        public string? SertificateUrl { get; set; }
+        public double AvarageRaiting { get; set; }
+
+
+
+        public User User { get; set; }
+        public ICollection<Product> Products { get; set; }
+
+    }
+}

@@ -1,24 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.API", "MarketLink.API\MarketLink.API.csproj", "{1D9016A7-22DA-4EE3-AAED-ED77799A87D9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{67D84886-2EE3-497F-BB6B-0617DC69EB91} = {67D84886-2EE3-497F-BB6B-0617DC69EB91}
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.Application", "MarketLink.Application\MarketLink.Application.csproj", "{67D84886-2EE3-497F-BB6B-0617DC69EB91}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D} = {AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D}
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.API", "src\MarketLink.API\MarketLink.API.csproj", "{53466733-5C3D-6A05-0029-CA09BD3FA744}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.DataAccess", "MarketLink.DataAccess\MarketLink.DataAccess.csproj", "{AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8118720D-DD3E-4313-879A-8D5C457C3D78} = {8118720D-DD3E-4313-879A-8D5C457C3D78}
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.Application", "src\MarketLink.Application\MarketLink.Application.csproj", "{22380F5F-BA7F-E748-DC4F-22A0CCD94378}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.Domain", "MarketLink.Domain\MarketLink.Domain.csproj", "{8118720D-DD3E-4313-879A-8D5C457C3D78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.DataAccess", "src\MarketLink.DataAccess\MarketLink.DataAccess.csproj", "{5317D3A7-D83D-7B81-F00C-C6D2532B34F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketLink.Domain", "src\MarketLink.Domain\MarketLink.Domain.csproj", "{382982DA-D44E-6E8F-FEC5-116919F31E70}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C3B38162-10AC-40FA-9308-9824462EA158}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,25 +21,31 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1D9016A7-22DA-4EE3-AAED-ED77799A87D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1D9016A7-22DA-4EE3-AAED-ED77799A87D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1D9016A7-22DA-4EE3-AAED-ED77799A87D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1D9016A7-22DA-4EE3-AAED-ED77799A87D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67D84886-2EE3-497F-BB6B-0617DC69EB91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67D84886-2EE3-497F-BB6B-0617DC69EB91}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67D84886-2EE3-497F-BB6B-0617DC69EB91}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67D84886-2EE3-497F-BB6B-0617DC69EB91}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB622A3B-1B8F-45E2-80DF-1EDF6EB6FA4D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8118720D-DD3E-4313-879A-8D5C457C3D78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8118720D-DD3E-4313-879A-8D5C457C3D78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8118720D-DD3E-4313-879A-8D5C457C3D78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8118720D-DD3E-4313-879A-8D5C457C3D78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53466733-5C3D-6A05-0029-CA09BD3FA744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53466733-5C3D-6A05-0029-CA09BD3FA744}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53466733-5C3D-6A05-0029-CA09BD3FA744}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53466733-5C3D-6A05-0029-CA09BD3FA744}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22380F5F-BA7F-E748-DC4F-22A0CCD94378}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22380F5F-BA7F-E748-DC4F-22A0CCD94378}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22380F5F-BA7F-E748-DC4F-22A0CCD94378}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22380F5F-BA7F-E748-DC4F-22A0CCD94378}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5317D3A7-D83D-7B81-F00C-C6D2532B34F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5317D3A7-D83D-7B81-F00C-C6D2532B34F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5317D3A7-D83D-7B81-F00C-C6D2532B34F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5317D3A7-D83D-7B81-F00C-C6D2532B34F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{382982DA-D44E-6E8F-FEC5-116919F31E70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{382982DA-D44E-6E8F-FEC5-116919F31E70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{382982DA-D44E-6E8F-FEC5-116919F31E70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{382982DA-D44E-6E8F-FEC5-116919F31E70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{53466733-5C3D-6A05-0029-CA09BD3FA744} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{22380F5F-BA7F-E748-DC4F-22A0CCD94378} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{5317D3A7-D83D-7B81-F00C-C6D2532B34F4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{382982DA-D44E-6E8F-FEC5-116919F31E70} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AEF85636-947E-438D-A02C-F6BF04745ADC}
