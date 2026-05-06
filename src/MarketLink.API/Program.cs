@@ -52,6 +52,9 @@ namespace MarketLink.API
 
             builder.Services.AddAuthorization();
 
+            // ── Health Check ──
+            builder.Services.AddHealthChecks();
+
             // ── Memory Cache ──
             builder.Services.AddMemoryCache();
 
@@ -186,6 +189,7 @@ namespace MarketLink.API
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapHealthChecks("/health");
             app.MapControllers();
 
             app.Run();
