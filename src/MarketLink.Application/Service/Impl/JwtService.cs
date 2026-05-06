@@ -16,7 +16,9 @@ namespace MarketLink.Application.Service.Impl
 
         public JwtService(IConfiguration cfg)
         {
-            _secretKey = cfg["Jwt:SecretKey"] ?? throw new ArgumentNullException("Jwt:SecretKey");
+            _secretKey = cfg["Jwt:SecretKey"];
+            if (string.IsNullOrWhiteSpace(_secretKey))
+                throw new InvalidOperationException("Jwt:SecretKey sozlanmagan yoki bo'sh. Railway Variables da 'Jwt__SecretKey' ni tekshiring.");
             _issuer    = cfg["Jwt:Issuer"]    ?? "MarketLink";
             _audience  = cfg["Jwt:Audience"]  ?? "MarketLink";
         }
