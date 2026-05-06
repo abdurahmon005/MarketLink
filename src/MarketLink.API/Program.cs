@@ -26,8 +26,9 @@ namespace MarketLink.API
 
             // ── JWT Authentication ──
             var jwtSettings = builder.Configuration.GetSection("Jwt");
-            var secretKey   = jwtSettings["SecretKey"]
-                ?? throw new Exception("Jwt:SecretKey topilmadi appsettings.json da");
+            var secretKey   = jwtSettings["SecretKey"];
+            if (string.IsNullOrWhiteSpace(secretKey))
+                throw new Exception($"Jwt:SecretKey topilmadi yoki bo'sh. Barcha Jwt config: Issuer={jwtSettings["Issuer"]}, Audience={jwtSettings["Audience"]}");
 
             builder.Services.AddAuthentication(options =>
             {
