@@ -98,9 +98,13 @@ namespace MarketLink.API
 
             builder.Services.AddSingleton<IMinioClient>(sp =>
             {
+                var endpoint = string.IsNullOrWhiteSpace(minioOpts.Endpoint)
+                    ? "localhost:9000"
+                    : minioOpts.Endpoint;
+
                 var client = new MinioClient()
-                    .WithEndpoint(minioOpts.Endpoint)
-                    .WithCredentials(minioOpts.AccessKey, minioOpts.SecretKey);
+                    .WithEndpoint(endpoint)
+                    .WithCredentials(minioOpts.AccessKey ?? "minioadmin", minioOpts.SecretKey ?? "minioadmin");
 
                 if (minioOpts.UseSSL)
                     client = client.WithSSL();
