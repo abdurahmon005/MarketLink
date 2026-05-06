@@ -1,7 +1,5 @@
 using MarketLink.API.Attributes;
 using MarketLink.API.Common;
-using MarketLink.Application.Models.Company;
-using MarketLink.Application.Models.Shop;
 using MarketLink.Application.Service;
 using MarketLink.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +13,7 @@ namespace MarketLink.API.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
-        private readonly IUserService          _userService;
+        private readonly IUserService            _userService;
         private readonly ILogger<UserController> _logger;
 
         public UserController(IUserService userService, ILogger<UserController> logger)
@@ -28,8 +26,7 @@ namespace MarketLink.API.Controllers
         public async Task<IActionResult> GetMyProfile()
         {
             var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
+            if (userId == null) return Unauthorized();
 
             var profile = await _userService.GetUserProfileAsync(userId.Value);
             if (profile == null)
@@ -45,39 +42,6 @@ namespace MarketLink.API.Controllers
                 Message = "Profil",
                 Data    = profile
             });
-        }
-        [HttpPut("me/company")]
-        public async Task<IActionResult> UpdateCompanyProfile([FromBody] UpdateCompanyProfileRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ValidationError());
-
-            var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
-
-            var (success, message) = await _userService.UpdateCompanyProfileAsync(userId.Value, request);
-
-            if (!success)
-                return BadRequest(new ApiResponse<object> { Success = false, Message = message });
-
-            return Ok(new ApiResponse<object> { Success = true, Message = message });
-        }
-
-        [HttpPut("me/shop")]
-        public async Task<IActionResult> UpdateShopProfile([FromBody] UpdateShopProfileRequest request)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ValidationError());
-
-            var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized();
-
-            var (success, message) = await _userService.UpdateShopProfileAsync(userId.Value, request);
-
-            if (!success)
-                return BadRequest(new ApiResponse<object> { Success = false, Message = message });
-
-            return Ok(new ApiResponse<object> { Success = true, Message = message });
         }
 
         [RequirePermission("admin.read_all")]
@@ -104,9 +68,6 @@ namespace MarketLink.API.Controllers
         [HttpPatch("{id:guid}/status")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ValidationError());
-
             var result = await _userService.UpdateUserStatusAsync(id, request.Status);
             if (!result)
                 return NotFound(new ApiResponse<object>
@@ -149,16 +110,6 @@ namespace MarketLink.API.Controllers
             var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
             return Guid.TryParse(value, out var id) ? id : null;
         }
-
-        private ApiResponse<object> ValidationError() => new()
-        {
-            Success = false,
-            Message = "Ma'lumotlar noto'g'ri",
-            Errors  = ModelState.Values
-                .SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage)
-                .ToList()
-        };
     }
 
     public class UpdateStatusRequest

@@ -1,7 +1,10 @@
+using FluentValidation;
 using MarketLink.Application.Options;
 using MarketLink.Application.Service;
 using MarketLink.Application.Service.Impl;
 using MarketLink.DataAccess.Persistence;
+using MarketLink.DataAccess.Repositories;
+using MarketLink.Domain.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -59,6 +62,26 @@ namespace MarketLink.API
             builder.Services.AddScoped<IOtpService,        OtpService>();
             builder.Services.AddScoped<IPermissionService, PermissionService>();
             builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
+            builder.Services.AddScoped<ICompanyService, CompanyService>();
+            builder.Services.AddScoped<IShopService, ShopService>();
+            builder.Services.AddScoped<ICompanyProductService, CompanyProductService>();
+            builder.Services.AddScoped<ICompanyOrderService, CompanyOrderService>();
+            builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+
+            // ── Shop Services ──
+            builder.Services.AddScoped<IShopProfileService, ShopProfileService>();
+            builder.Services.AddScoped<ICatalogService, CatalogService>();
+            builder.Services.AddScoped<ICartService, CartService>();
+            builder.Services.AddScoped<IShopOrderService, ShopOrderService>();
+            builder.Services.AddScoped<IRatingService, RatingService>();
+
+            // ── Unit of Work / Repositories ──
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<MarketLink.Domain.Interfaces.ICartRepository,
+                                       MarketLink.DataAccess.Repositories.CartRepository>();
+
+            // ── FluentValidation ──
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
             // SMS xizmati — HttpClient bilan
             builder.Services.AddHttpClient<ISmsService, SmsService>();
@@ -88,39 +111,44 @@ namespace MarketLink.API
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
-            // ── Swagger ──
-            builder.Services.AddSwaggerGen(c =>
+            // ── Swagger (faqat Development rejimida) ──
+            if (builder.Environment.IsDevelopment())
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
+                builder.Services.AddSwaggerGen(c =>
                 {
-                    Title   = "Market Link API",
-                    Version = "v1"
-                });
-
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Bearer token. Misol: Bearer {token}",
-                    Name        = "Authorization",
-                    In          = ParameterLocation.Header,
-                    Type        = SecuritySchemeType.ApiKey,
-                    Scheme      = "Bearer"
-                });
-
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
+                    c.SwaggerDoc("v1", new OpenApiInfo
                     {
-                        new OpenApiSecurityScheme
+                        Title   = "Market Link API",
+                        Version = "v1"
+                    });
+
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                    {
+                        Description = "JWT Bearer token. Misol: Bearer {token}",
+                        Name        = "Authorization",
+                        In          = ParameterLocation.Header,
+                        Type        = SecuritySchemeType.ApiKey,
+                        Scheme      = "Bearer"
+                    });
+
+                    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
                         {
-                            Reference = new OpenApiReference
+                            new OpenApiSecurityScheme
                             {
-                                Type = ReferenceType.SecurityScheme,
-                                Id   = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id   = "Bearer"
+                                }
+                            },
+                            Array.Empty<string>()
+                        }
+                    });
+
+                    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
                 });
-            });
+            }
 
             // ── CORS ──
             builder.Services.AddCors(options =>
@@ -131,23 +159,29 @@ namespace MarketLink.API
 
             var app = builder.Build();
 
-            // ── Database seed ──
+            // ── Database migration (production-safe) ──
             using (var scope = app.Services.CreateScope())
             {
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await ctx.Database.EnsureCreatedAsync();
+                await ctx.Database.MigrateAsync();
                 await DataSeeder.SeedAsync(ctx);
             }
 
-            // ── Middleware ──
+            // ── Swagger (faqat Development) ──
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Market Link API v1");
+                    c.RoutePrefix = "swagger";
+                });
             }
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");
+
+            app.UseMiddleware<MarketLink.API.Middleware.ExceptionMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

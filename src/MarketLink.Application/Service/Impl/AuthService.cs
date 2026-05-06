@@ -42,6 +42,7 @@ namespace MarketLink.Application.Service.Impl
             _jwtService  = jwtService;
             _cache       = cache;
         }
+
         public async Task<(bool Success, string Message, RegisterResponse? Data)> RegisterCompanyAsync(
             RegisterCompanyRequest request)
         {
@@ -63,7 +64,9 @@ namespace MarketLink.Application.Service.Impl
                 CompanyName    = request.CompanyName,
                 Address        = request.Address,
                 ProductionType = request.ProductionType,
-                Description    = request.Description
+                Description    = request.Description,
+                CreatedAt      = DateTime.UtcNow,
+                UpdatedAt      = DateTime.UtcNow
             });
 
             _context.UserRoles.Add(new UserRoleEntity { UserId = user.Id, RoleId = CompanyRoleId });
@@ -102,7 +105,8 @@ namespace MarketLink.Application.Service.Impl
                 Address     = request.Address,
                 ShopType    = request.ShopType,
                 Description = request.Description,
-                CreatedAt   = DateTime.UtcNow
+                CreatedAt   = DateTime.UtcNow,
+                UpdatedAt   = DateTime.UtcNow
             });
 
             _context.UserRoles.Add(new UserRoleEntity { UserId = user.Id, RoleId = ShopRoleId });
@@ -132,7 +136,8 @@ namespace MarketLink.Application.Service.Impl
             if (user.Status == UserStatus.Blocked)
                 return (false, "Bu akkaunt bloklangan", null);
 
-            var accessToken = _jwtService.GenerateAccessToken(user);
+            var profileId = await GetProfileIdAsync(user.Id);
+            var accessToken = _jwtService.GenerateAccessToken(user, profileId);
 
             var refreshToken = new RefreshTokenEntity
             {
@@ -190,6 +195,7 @@ namespace MarketLink.Application.Service.Impl
 
             return (true, "Telefon raqam muvaffaqiyatli tasdiqlandi");
         }
+
         public async Task<(bool Success, string Message)> ResendOtpAsync(ResendOtpRequest request)
         {
             var user = await _userService.GetUserByPhoneAsync(request.PhoneNumber);
@@ -230,6 +236,7 @@ namespace MarketLink.Application.Service.Impl
 
             return (true, "Parolni tiklash kodi telefon raqamingizga yuborildi");
         }
+
         public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
         {
             var user = await _userService.GetUserByPhoneAsync(request.PhoneNumber);
@@ -269,6 +276,7 @@ namespace MarketLink.Application.Service.Impl
 
             return (true, "Parol muvaffaqiyatli o'zgartirildi");
         }
+
         public async Task<(bool Success, string Message, TokenResponse? Response)> RefreshTokenAsync(
             RefreshTokenRequest request)
         {
@@ -289,8 +297,9 @@ namespace MarketLink.Application.Service.Impl
 
             tokenEntity.IsRevoked = true;
 
-            var newAccess = _jwtService.GenerateAccessToken(tokenEntity.User);
-            var newRefresh = new RefreshTokenEntity
+            var profileId   = await GetProfileIdAsync(tokenEntity.UserId);
+            var newAccess   = _jwtService.GenerateAccessToken(tokenEntity.User, profileId);
+            var newRefresh  = new RefreshTokenEntity
             {
                 Id          = Guid.NewGuid(),
                 UserId      = tokenEntity.UserId,
@@ -346,6 +355,23 @@ namespace MarketLink.Application.Service.Impl
             }).ToList();
         }
 
+        // ── Helpers ──────────────────────────────────────────────────────────
+
+        private async Task<int?> GetProfileIdAsync(Guid userId)
+        {
+            var companyId = await _context.Companies
+                .Where(c => c.UserId == userId)
+                .Select(c => (int?)c.Id)
+                .FirstOrDefaultAsync();
+
+            if (companyId.HasValue) return companyId;
+
+            return await _context.Shops
+                .Where(s => s.UserId == userId)
+                .Select(s => (int?)s.Id)
+                .FirstOrDefaultAsync();
+        }
+
         private async Task RevokeAllTokensAsync(Guid userId)
         {
             var tokens = await _context.RefreshTokens
@@ -358,7 +384,8 @@ namespace MarketLink.Application.Service.Impl
             await _context.SaveChangesAsync();
         }
 
-        private static string GenerateOtp() => "11111";
+        private static string GenerateOtp() =>
+            Random.Shared.Next(100_000, 999_999).ToString();
 
         private static string CleanPhone(string phone) =>
             new string(phone.Where(char.IsDigit).ToArray());

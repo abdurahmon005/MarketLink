@@ -1,16 +1,11 @@
-﻿using MarketLink.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using MarketLink.Domain.Entities;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MarketLink.Application.Service
 {
     public interface IJwtService
     {
-        string GenerateAccessToken(User user);
+        string GenerateAccessToken(User user, int? profileId = null);
         string GenerateRefreshToken();
         ClaimsPrincipal? ValidateToken(string token);
         Guid? GetUserIdFromToken(string token);

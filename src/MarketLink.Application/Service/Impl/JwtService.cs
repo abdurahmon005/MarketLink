@@ -21,7 +21,7 @@ namespace MarketLink.Application.Service.Impl
             _audience  = cfg["Jwt:Audience"]  ?? "MarketLink";
         }
 
-        public string GenerateAccessToken(User user)
+        public string GenerateAccessToken(User user, int? profileId = null)
         {
             var claims = new List<Claim>
             {
@@ -33,6 +33,9 @@ namespace MarketLink.Application.Service.Impl
             if (user.UserRoles != null)
                 foreach (var ur in user.UserRoles)
                     claims.Add(new Claim(ClaimTypes.Role, ur.Role.Name));
+
+            if (profileId.HasValue)
+                claims.Add(new Claim("profile_id", profileId.Value.ToString()));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
 

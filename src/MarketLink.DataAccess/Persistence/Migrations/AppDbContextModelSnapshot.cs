@@ -22,6 +22,39 @@ namespace MarketLink.DataAccess.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("MarketLink.Domain.Entities.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ShopId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ShopId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("CartItems");
+                });
+
             modelBuilder.Entity("MarketLink.Domain.Entities.Company", b =>
                 {
                     b.Property<int>("Id")
@@ -34,12 +67,20 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("AvarageRaiting")
-                        .HasColumnType("double precision");
+                    b.Property<double>("AverageRating")
+                        .HasColumnType("double precision")
+                        .HasColumnName("AverageRating");
+
+                    b.Property<string>("CertificateUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("CertificateUrl");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -52,11 +93,12 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                     b.Property<string>("LogoUrl")
                         .HasColumnType("text");
 
-                    b.Property<int>("ProductionType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SertificateUrl")
+                    b.Property<string>("ProductionType")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -67,6 +109,83 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DeliveryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ShopId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("ShopId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("MarketLink.Domain.Entities.OtpCode", b =>
@@ -131,14 +250,86 @@ namespace MarketLink.DataAccess.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CompanyId")
+                    b.Property<double>("AverageRating")
+                        .HasColumnType("double precision")
+                        .HasColumnName("AverageRating");
+
+                    b.Property<int>("CompanyId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PackageSize")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.Rating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ShopId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ShopId", "ProductId", "OrderId")
+                        .IsUnique();
+
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("MarketLink.Domain.Entities.RefreshToken", b =>
@@ -242,6 +433,10 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("CertificateUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("CertificateUrl");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -253,7 +448,7 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SertificateUrl")
+                    b.Property<string>("LogoUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("ShopName")
@@ -400,6 +595,25 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                     b.ToTable("UserRoles");
                 });
 
+            modelBuilder.Entity("MarketLink.Domain.Entities.CartItem", b =>
+                {
+                    b.HasOne("MarketLink.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MarketLink.Domain.Entities.Shop", "Shop")
+                        .WithMany("CartItems")
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Shop");
+                });
+
             modelBuilder.Entity("MarketLink.Domain.Entities.Company", b =>
                 {
                     b.HasOne("MarketLink.Domain.Entities.User", "User")
@@ -411,11 +625,80 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MarketLink.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("MarketLink.Domain.Entities.Company", "Company")
+                        .WithMany("Orders")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MarketLink.Domain.Entities.Shop", "Shop")
+                        .WithMany("Orders")
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Shop");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.OrderItem", b =>
+                {
+                    b.HasOne("MarketLink.Domain.Entities.Order", "Order")
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MarketLink.Domain.Entities.Product", "Product")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("MarketLink.Domain.Entities.Product", b =>
                 {
-                    b.HasOne("MarketLink.Domain.Entities.Company", null)
+                    b.HasOne("MarketLink.Domain.Entities.Company", "Company")
                         .WithMany("Products")
-                        .HasForeignKey("CompanyId");
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.Rating", b =>
+                {
+                    b.HasOne("MarketLink.Domain.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MarketLink.Domain.Entities.Product", "Product")
+                        .WithMany("Ratings")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MarketLink.Domain.Entities.Shop", "Shop")
+                        .WithMany("Ratings")
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Shop");
                 });
 
             modelBuilder.Entity("MarketLink.Domain.Entities.RefreshToken", b =>
@@ -432,7 +715,7 @@ namespace MarketLink.DataAccess.Persistence.Migrations
             modelBuilder.Entity("MarketLink.Domain.Entities.RolePermission", b =>
                 {
                     b.HasOne("MarketLink.Domain.Entities.Permission", "Permission")
-                        .WithMany("RolePermisssions")
+                        .WithMany("RolePermissions")
                         .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -491,12 +774,26 @@ namespace MarketLink.DataAccess.Persistence.Migrations
 
             modelBuilder.Entity("MarketLink.Domain.Entities.Company", b =>
                 {
+                    b.Navigation("Orders");
+
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.Order", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("MarketLink.Domain.Entities.Permission", b =>
                 {
-                    b.Navigation("RolePermisssions");
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("MarketLink.Domain.Entities.Product", b =>
+                {
+                    b.Navigation("OrderItems");
+
+                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("MarketLink.Domain.Entities.Role", b =>
@@ -506,13 +803,20 @@ namespace MarketLink.DataAccess.Persistence.Migrations
                     b.Navigation("UserRoles");
                 });
 
+            modelBuilder.Entity("MarketLink.Domain.Entities.Shop", b =>
+                {
+                    b.Navigation("CartItems");
+
+                    b.Navigation("Orders");
+
+                    b.Navigation("Ratings");
+                });
+
             modelBuilder.Entity("MarketLink.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Company")
-                        .IsRequired();
+                    b.Navigation("Company");
 
-                    b.Navigation("Shop")
-                        .IsRequired();
+                    b.Navigation("Shop");
 
                     b.Navigation("UserRoles");
                 });

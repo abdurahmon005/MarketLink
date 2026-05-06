@@ -34,6 +34,7 @@ namespace MarketLink.Application.Service.Impl
 
             return user;
         }
+
         public async Task<User?> GetUserByIdAsync(Guid userId)
         {
             return await _context.Users
@@ -42,6 +43,7 @@ namespace MarketLink.Application.Service.Impl
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == userId);
         }
+
         public async Task<User?> GetUserByPhoneAsync(string phoneNumber)
         {
             var clean = NormalizePhone(phoneNumber);
@@ -73,21 +75,24 @@ namespace MarketLink.Application.Service.Impl
                     Address        = user.Company.Address,
                     ProductionType = user.Company.ProductionType,
                     Description    = user.Company.Description,
-                    AvarageRaiting = user.Company.AvarageRaiting,
+                    AverageRating  = user.Company.AverageRating,
                     LogoUrl        = user.Company.LogoUrl,
-                    SertificateUrl = user.Company.SertificateUrl,
-                    CreatedAt      = user.CreatedAt
+                    CertificateUrl = user.Company.CertificateUrl,
+                    CreatedAt      = user.Company.CreatedAt,
+                    UpdatedAt      = user.Company.UpdatedAt
                 } : null,
                 Shop = user.Shop != null ? new ShopProfileResponse
                 {
-                    Id          = user.Shop.Id,
-                    FounderName = user.Shop.FounderName,
-                    ShopName    = user.Shop.ShopName,
-                    Address     = user.Shop.Address,
-                    ShopType    = user.Shop.ShopType,
-                    Description = user.Shop.Description,
-                    SertificateUrl = user.Shop.SertificateUrl,
-                    CreatedAt   = user.Shop.CreatedAt
+                    Id             = user.Shop.Id,
+                    FounderName    = user.Shop.FounderName,
+                    ShopName       = user.Shop.ShopName,
+                    Address        = user.Shop.Address,
+                    ShopType       = user.Shop.ShopType,
+                    Description    = user.Shop.Description,
+                    LogoUrl        = user.Shop.LogoUrl,
+                    CertificateUrl = user.Shop.CertificateUrl,
+                    CreatedAt      = user.Shop.CreatedAt,
+                    UpdatedAt      = user.Shop.UpdatedAt
                 } : null
             };
         }
@@ -108,6 +113,7 @@ namespace MarketLink.Application.Service.Impl
             if (request.ProductionType != null) user.Company.ProductionType = request.ProductionType.Value;
             if (request.Description    != null) user.Company.Description    = request.Description;
 
+            user.Company.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return (true, "Company profili yangilandi");
