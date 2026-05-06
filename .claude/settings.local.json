@@ -35,7 +35,19 @@
       "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | tail -20)",
       "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | tail -5)",
       "Bash(cd \"D:/C# dasturlash tili/MarketLink.API/src/MarketLink.Application\" && dotnet remove package StackExchange.Redis)",
-      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | grep -E \"error|warning CS\" | grep -v \"warning CS8\" | head -20)"
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build 2>&1 | grep -E \"error|warning CS\" | grep -v \"warning CS8\" | head -20)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | tail -30)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | grep -E \"\\(error|Error|warning CS\\)\" | head -40)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | grep -E \"^.*error\" | head -20)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | tail -5)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | grep -E \"error CS\" | head -20)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | grep -E \"error CS\" | head -10)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj 2>&1 | tail -50)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj -c Release --nologo 2>&1 | tail -30)",
+      "Bash(cd \"D:\\\\C# dasturlash tili\\\\MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj -c Release --nologo 2>&1 | tail -30)",
+      "Bash(echo -e \"\\\\n# Environment variables\\\\n.env\\\\n.env.local\" >> \"D:/C# dasturlash tili/MarketLink.API/.gitignore\")",
+      "Bash(cat > \"D:/C# dasturlash tili/MarketLink.API/.env.example\" << 'EOF'\n# Copy this file to .env and fill in the values before running docker-compose\n\n# PostgreSQL\nPOSTGRES_DB=MarketLinkDb\nPOSTGRES_USER=postgres\nPOSTGRES_PASSWORD=your_strong_password_here\n\n# JWT\nJWT_SECRET=MarketLink_SuperSecretKey_Min32Chars_ChangeThis!\nJWT_ISSUER=MarketLink\nJWT_AUDIENCE=MarketLink\n\n# Eskiz SMS \\(https://eskiz.uz\\)\nESKIZ_EMAIL=your@email.com\nESKIZ_PASSWORD=your_eskiz_password\n\n# MinIO\nMINIO_USER=minioadmin\nMINIO_PASSWORD=your_minio_password\nMINIO_PUBLIC_URL=http://your-server-ip:9000\n\n# API\nAPI_PORT=5000\nASPNETCORE_ENVIRONMENT=Production\nEOF)",
+      "Bash(cd \"D:/C# dasturlash tili/MarketLink.API\" && dotnet build src/MarketLink.API/MarketLink.API.csproj -c Release --no-restore 2>&1 | tail -20)"
     ]
   }
 }
