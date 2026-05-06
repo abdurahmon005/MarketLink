@@ -166,12 +166,26 @@ namespace MarketLink.API
 
             var app = builder.Build();
 
-            // ── Database migration (production-safe) ──
+            // ── Database migration (retry — DB hali tayyor bo'lmasligi mumkin) ──
             using (var scope = app.Services.CreateScope())
             {
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await ctx.Database.MigrateAsync();
-                await DataSeeder.SeedAsync(ctx);
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                var maxRetries = 10;
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                {
+                    try
+                    {
+                        await ctx.Database.MigrateAsync();
+                        await DataSeeder.SeedAsync(ctx);
+                        break;
+                    }
+                    catch (Exception ex) when (attempt < maxRetries)
+                    {
+                        logger.LogWarning("DB ulanish #{Attempt} muvaffaqiyatsiz: {Message}. 5s kutilmoqda...", attempt, ex.Message);
+                        await Task.Delay(5000);
+                    }
+                }
             }
 
             // ── Swagger (faqat Development) ──
@@ -185,7 +199,6 @@ namespace MarketLink.API
                 });
             }
 
-            app.UseHttpsRedirection();
             app.UseCors("AllowAll");
 
             app.UseMiddleware<MarketLink.API.Middleware.ExceptionMiddleware>();
