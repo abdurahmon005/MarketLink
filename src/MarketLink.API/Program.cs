@@ -206,6 +206,17 @@ namespace MarketLink.API
             app.UseAuthorization();
 
             app.MapHealthChecks("/health");
+
+            // Vaqtincha debug endpoint
+            app.MapGet("/debug/jwt", (IConfiguration cfg) => new
+            {
+                JwtKeyLength  = cfg["Jwt:SecretKey"]?.Length ?? 0,
+                JwtKeyIsEmpty = string.IsNullOrWhiteSpace(cfg["Jwt:SecretKey"]),
+                JwtIssuer     = cfg["Jwt:Issuer"],
+                JwtAudience   = cfg["Jwt:Audience"],
+                Environment   = cfg["ASPNETCORE_ENVIRONMENT"]
+            });
+
             app.MapControllers();
 
             app.Run();
