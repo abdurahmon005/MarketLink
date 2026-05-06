@@ -119,10 +119,8 @@ namespace MarketLink.API
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
-            // ── Swagger (faqat Development rejimida) ──
-            if (builder.Environment.IsDevelopment())
-            {
-                builder.Services.AddSwaggerGen(c =>
+            // ── Swagger ──
+            builder.Services.AddSwaggerGen(c =>
                 {
                     c.SwaggerDoc("v1", new OpenApiInfo
                     {
@@ -156,7 +154,6 @@ namespace MarketLink.API
 
                     c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
                 });
-            }
 
             // ── CORS ──
             builder.Services.AddCors(options =>
@@ -193,16 +190,13 @@ namespace MarketLink.API
                 });
             });
 
-            // ── Swagger (faqat Development) ──
-            if (app.Environment.IsDevelopment())
+            // ── Swagger ──
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Market Link API v1");
-                    c.RoutePrefix = "swagger";
-                });
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Market Link API v1");
+                c.RoutePrefix = "swagger";
+            });
 
             app.UseCors("AllowAll");
 
