@@ -166,27 +166,31 @@ namespace MarketLink.API
 
             var app = builder.Build();
 
-            // ── Database migration (retry — DB hali tayyor bo'lmasligi mumkin) ──
-            using (var scope = app.Services.CreateScope())
+            // ── Database migration — HTTP server ishga tushgandan keyin background da ──
+            app.Lifetime.ApplicationStarted.Register(() =>
             {
-                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                var maxRetries = 10;
-                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                _ = Task.Run(async () =>
                 {
-                    try
+                    using var scope = app.Services.CreateScope();
+                    var ctx    = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    for (int attempt = 1; attempt <= 10; attempt++)
                     {
-                        await ctx.Database.MigrateAsync();
-                        await DataSeeder.SeedAsync(ctx);
-                        break;
+                        try
+                        {
+                            await ctx.Database.MigrateAsync();
+                            await DataSeeder.SeedAsync(ctx);
+                            logger.LogInformation("Migration va seeding muvaffaqiyatli yakunlandi.");
+                            break;
+                        }
+                        catch (Exception ex) when (attempt < 10)
+                        {
+                            logger.LogWarning("DB ulanish #{Attempt} muvaffaqiyatsiz: {Message}. 5s kutilmoqda...", attempt, ex.Message);
+                            await Task.Delay(5000);
+                        }
                     }
-                    catch (Exception ex) when (attempt < maxRetries)
-                    {
-                        logger.LogWarning("DB ulanish #{Attempt} muvaffaqiyatsiz: {Message}. 5s kutilmoqda...", attempt, ex.Message);
-                        await Task.Delay(5000);
-                    }
-                }
-            }
+                });
+            });
 
             // ── Swagger (faqat Development) ──
             if (app.Environment.IsDevelopment())
