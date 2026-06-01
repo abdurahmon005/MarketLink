@@ -384,8 +384,8 @@ namespace MarketLink.Application.Service.Impl
             await _context.SaveChangesAsync();
         }
 
-        private static string GenerateOtp() =>
-            Random.Shared.Next(100_000, 999_999).ToString();
+        // TODO: Test mode — statik OTP. SMS tayyor bo'lganda o'chirish kerak.
+        private static string GenerateOtp() => "11111";
 
         private static string CleanPhone(string phone) =>
             new string(phone.Where(char.IsDigit).ToArray());
