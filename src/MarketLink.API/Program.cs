@@ -49,6 +49,22 @@ namespace MarketLink.API
                         Encoding.UTF8.GetBytes(secretKey)),
                     ClockSkew = TimeSpan.Zero
                 };
+
+                // Allow JWT via query string for SignalR WebSocket connections
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        var accessToken = ctx.Request.Query["access_token"];
+                        var path        = ctx.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/hubs"))
+                        {
+                            ctx.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             builder.Services.AddAuthorization();
@@ -78,6 +94,11 @@ namespace MarketLink.API
             builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<IShopOrderService, ShopOrderService>();
             builder.Services.AddScoped<IRatingService, RatingService>();
+
+            // ── Tracking / Notification / Dashboard ──
+            builder.Services.AddScoped<ITrackingService, TrackingService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
 
             // ── Unit of Work / Repositories ──
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -114,6 +135,9 @@ namespace MarketLink.API
             });
 
             builder.Services.AddScoped<IFileService, MinioFileService>();
+
+            // ── SignalR ──
+            builder.Services.AddSignalR();
 
             // ── Controllers ──
             builder.Services.AddControllers();
@@ -157,10 +181,22 @@ namespace MarketLink.API
 
             // ── CORS ──
             builder.Services.AddCors(options =>
+            {
                 options.AddPolicy("AllowAll", p =>
                     p.AllowAnyOrigin()
                      .AllowAnyMethod()
-                     .AllowAnyHeader()));
+                     .AllowAnyHeader());
+
+                // SignalR requires AllowCredentials + specific origins (can't use AllowAnyOrigin)
+                options.AddPolicy("SignalRPolicy", p =>
+                    p.WithOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:3000",
+                        "http://localhost:4200")
+                     .AllowAnyMethod()
+                     .AllowAnyHeader()
+                     .AllowCredentials());
+            });
 
             var app = builder.Build();
 
@@ -218,6 +254,9 @@ namespace MarketLink.API
             });
 
             app.MapControllers();
+
+            app.MapHub<MarketLink.API.Hubs.TrackingHub>("/hubs/tracking")
+               .RequireCors("SignalRPolicy");
 
             app.Run();
         }

@@ -25,6 +25,10 @@ namespace MarketLink.DataAccess.Persistence
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<DeliveryTracking> DeliveryTrackings { get; set; }
+        public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<DeviceToken> DeviceTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder mb)
         {
@@ -162,6 +166,60 @@ namespace MarketLink.DataAccess.Persistence
                     .HasForeignKey(c => c.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex(c => new { c.ShopId, c.ProductId }).IsUnique();
+            });
+
+            // ── DeliveryTracking ──
+            mb.Entity<DeliveryTracking>(e =>
+            {
+                e.HasOne(d => d.Order)
+                    .WithMany()
+                    .HasForeignKey(d => d.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(d => d.OrderId).IsUnique();
+                e.Property(d => d.CurrentLat).HasPrecision(18, 6);
+                e.Property(d => d.CurrentLng).HasPrecision(18, 6);
+                e.Property(d => d.DistanceLeft).HasPrecision(18, 2);
+            });
+
+            // ── OrderStatusHistory ──
+            mb.Entity<OrderStatusHistory>(e =>
+            {
+                e.HasOne(h => h.Order)
+                    .WithMany()
+                    .HasForeignKey(h => h.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(h => h.ChangedByUser)
+                    .WithMany()
+                    .HasForeignKey(h => h.ChangedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.Property(h => h.Status).HasConversion<string>();
+            });
+
+            // ── Notification ──
+            mb.Entity<Notification>(e =>
+            {
+                e.HasOne(n => n.User)
+                    .WithMany()
+                    .HasForeignKey(n => n.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(n => n.Order)
+                    .WithMany()
+                    .HasForeignKey(n => n.OrderId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.SetNull);
+                e.Property(n => n.Type).HasConversion<string>();
+                e.HasIndex(n => new { n.UserId, n.IsRead });
+            });
+
+            // ── DeviceToken ──
+            mb.Entity<DeviceToken>(e =>
+            {
+                e.HasOne(d => d.User)
+                    .WithMany()
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(d => d.Token).IsUnique();
+                e.Property(d => d.Platform).HasConversion<string>();
             });
         }
     }
