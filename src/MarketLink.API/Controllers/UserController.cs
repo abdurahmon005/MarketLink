@@ -66,7 +66,7 @@ namespace MarketLink.API.Controllers
 
         [RequirePermission("admin.block")]
         [HttpPatch("{id:guid}/status")]
-        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateUserStatusRequest request)
         {
             var result = await _userService.UpdateUserStatusAsync(id, request.Status);
             if (!result)
@@ -112,7 +112,7 @@ namespace MarketLink.API.Controllers
         }
     }
 
-    public class UpdateStatusRequest
+    public class UpdateUserStatusRequest
     {
         public UserStatus Status { get; set; }
     }
