@@ -171,37 +171,53 @@ namespace MarketLink.DataAccess.Persistence
         // ── Users ──────────────────────────────────────────────────────────────
         private static async Task SeedUsersAsync(AppDbContext ctx)
         {
-            var existingIds = (await ctx.Users.Select(u => u.Id).ToListAsync()).ToHashSet();
             var now = DateTime.UtcNow;
 
             string Hash(string pw) => BCrypt.Net.BCrypt.HashPassword(pw);
 
-            var users = new[]
+            // (id, phone, passwordHash)
+            var seedUsers = new[]
             {
-                // Admin
-                new User
-                {
-                    Id = AdminUserId, PhoneNumber = "998901000001",
-                    IsPhoneVerified = true, PasswordHash = Hash("Admin@123"),
-                    Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now,
-                },
-                // Company users (ta'minotchilar)
-                new User { Id = CompUser1Id, PhoneNumber = "998901000011", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser2Id, PhoneNumber = "998901000012", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser3Id, PhoneNumber = "998901000013", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser4Id, PhoneNumber = "998901000014", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser5Id, PhoneNumber = "998901000015", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                // Shop users (sotuvchilar)
-                new User { Id = ShopUser1Id, PhoneNumber = "998901000021", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser2Id, PhoneNumber = "998901000022", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser3Id, PhoneNumber = "998901000023", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser4Id, PhoneNumber = "998901000024", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser5Id, PhoneNumber = "998901000025", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                (Id: AdminUserId,  Phone: "998901000001", Hash: Hash("Admin@123")),
+                (Id: CompUser1Id,  Phone: "998901000011", Hash: Hash("Company@123")),
+                (Id: CompUser2Id,  Phone: "998901000012", Hash: Hash("Company@123")),
+                (Id: CompUser3Id,  Phone: "998901000013", Hash: Hash("Company@123")),
+                (Id: CompUser4Id,  Phone: "998901000014", Hash: Hash("Company@123")),
+                (Id: CompUser5Id,  Phone: "998901000015", Hash: Hash("Company@123")),
+                (Id: ShopUser1Id,  Phone: "998901000021", Hash: Hash("Shop@123")),
+                (Id: ShopUser2Id,  Phone: "998901000022", Hash: Hash("Shop@123")),
+                (Id: ShopUser3Id,  Phone: "998901000023", Hash: Hash("Shop@123")),
+                (Id: ShopUser4Id,  Phone: "998901000024", Hash: Hash("Shop@123")),
+                (Id: ShopUser5Id,  Phone: "998901000025", Hash: Hash("Shop@123")),
             };
 
-            foreach (var u in users)
-                if (!existingIds.Contains(u.Id))
-                    ctx.Users.Add(u);
+            var allIds = seedUsers.Select(s => s.Id).ToList();
+            var existing = await ctx.Users
+                .Where(u => allIds.Contains(u.Id))
+                .ToListAsync();
+            var existingMap = existing.ToDictionary(u => u.Id);
+
+            foreach (var (id, phone, hash) in seedUsers)
+            {
+                if (existingMap.TryGetValue(id, out var dbUser))
+                {
+                    // Fix phone if stored with '+' prefix or wrong format
+                    if (dbUser.PhoneNumber != phone)
+                    {
+                        dbUser.PhoneNumber = phone;
+                        dbUser.UpdatedAt   = now;
+                    }
+                }
+                else
+                {
+                    ctx.Users.Add(new User
+                    {
+                        Id = id, PhoneNumber = phone,
+                        IsPhoneVerified = true, PasswordHash = hash,
+                        Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now,
+                    });
+                }
+            }
         }
 
         // ── UserRoles ──────────────────────────────────────────────────────────
