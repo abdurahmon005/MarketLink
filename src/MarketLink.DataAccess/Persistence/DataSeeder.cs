@@ -181,22 +181,22 @@ namespace MarketLink.DataAccess.Persistence
                 // Admin
                 new User
                 {
-                    Id = AdminUserId, PhoneNumber = "+998901000001",
+                    Id = AdminUserId, PhoneNumber = "998901000001",
                     IsPhoneVerified = true, PasswordHash = Hash("Admin@123"),
                     Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now,
                 },
                 // Company users (ta'minotchilar)
-                new User { Id = CompUser1Id, PhoneNumber = "+998901000011", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser2Id, PhoneNumber = "+998901000012", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser3Id, PhoneNumber = "+998901000013", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser4Id, PhoneNumber = "+998901000014", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = CompUser5Id, PhoneNumber = "+998901000015", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = CompUser1Id, PhoneNumber = "998901000011", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = CompUser2Id, PhoneNumber = "998901000012", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = CompUser3Id, PhoneNumber = "998901000013", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = CompUser4Id, PhoneNumber = "998901000014", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = CompUser5Id, PhoneNumber = "998901000015", IsPhoneVerified = true, PasswordHash = Hash("Company@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
                 // Shop users (sotuvchilar)
-                new User { Id = ShopUser1Id, PhoneNumber = "+998901000021", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser2Id, PhoneNumber = "+998901000022", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser3Id, PhoneNumber = "+998901000023", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser4Id, PhoneNumber = "+998901000024", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
-                new User { Id = ShopUser5Id, PhoneNumber = "+998901000025", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = ShopUser1Id, PhoneNumber = "998901000021", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = ShopUser2Id, PhoneNumber = "998901000022", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = ShopUser3Id, PhoneNumber = "998901000023", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = ShopUser4Id, PhoneNumber = "998901000024", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
+                new User { Id = ShopUser5Id, PhoneNumber = "998901000025", IsPhoneVerified = true, PasswordHash = Hash("Shop@123"), Status = UserStatus.Approved, CreatedAt = now, UpdatedAt = now },
             };
 
             foreach (var u in users)
