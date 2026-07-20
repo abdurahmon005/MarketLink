@@ -12,6 +12,9 @@ namespace MarketLink.Domain.Entities
 
         public string? Comment { get; set; }
 
+        public string? SupplierReply { get; set; }
+        public DateTime? RepliedAt { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation

@@ -2,6 +2,7 @@
 using MarketLink.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using UserRoleEntity = MarketLink.Domain.Entities.UserRole;
+using BCrypt.Net;
 
 namespace MarketLink.DataAccess.Persistence
 {
@@ -79,6 +80,19 @@ namespace MarketLink.DataAccess.Persistence
             await ctx.SaveChangesAsync();
 
             await SeedOrdersAsync(ctx);
+            await ctx.SaveChangesAsync();
+
+            await SeedRatingsAsync(ctx);
+            await ctx.SaveChangesAsync();
+
+            await SeedCompanyBranchesAsync(ctx);
+            await SeedCompanyDocumentsAsync(ctx);
+            await ctx.SaveChangesAsync();
+
+            await SeedProductStockHistoriesAsync(ctx);
+            await ctx.SaveChangesAsync();
+
+            await SeedSupplierNotificationsAsync(ctx);
             await ctx.SaveChangesAsync();
         }
 
@@ -593,6 +607,356 @@ namespace MarketLink.DataAccess.Persistence
             };
 
             ctx.Orders.AddRange(order1, order2, order3, order4, order5, order6, order7);
+        }
+
+        // ── Ratings (Sharhlar) ─────────────────────────────────────────────────
+        private static async Task SeedRatingsAsync(AppDbContext ctx)
+        {
+            if (await ctx.Ratings.AnyAsync()) return;
+
+            var compMap = await ctx.Companies
+                .Where(c => CompanyUserIds.Contains(c.UserId))
+                .ToDictionaryAsync(c => c.UserId, c => c.Id);
+
+            var shopMap = await ctx.Shops
+                .Where(s => ShopUserIds.Contains(s.UserId))
+                .ToDictionaryAsync(s => s.UserId, s => s.Id);
+
+            var orders = await ctx.Orders
+                .Where(o => o.Status == OrderStatus.Delivered)
+                .Include(o => o.Items)
+                .ToListAsync();
+
+            if (!orders.Any() || compMap.Count < 5 || shopMap.Count < 5) return;
+
+            int dairy = compMap[CompUser1Id];
+            int shop1 = shopMap[ShopUser1Id];
+            int shop2 = shopMap[ShopUser2Id];
+            int shop5 = shopMap[ShopUser5Id];
+
+            // Find delivered orders and their products
+            var deliveredOrder1 = orders.FirstOrDefault(o => o.ShopId == shop1 && o.CompanyId == dairy);
+            var deliveredOrder5 = orders.FirstOrDefault(o => o.ShopId == shop5);
+
+            var now = DateTime.UtcNow;
+            var ratings = new List<Rating>();
+
+            if (deliveredOrder1 != null)
+            {
+                foreach (var item in deliveredOrder1.Items.Take(3))
+                {
+                    ratings.Add(new Rating
+                    {
+                        ProductId = item.ProductId, ShopId = shop1,
+                        OrderId = deliveredOrder1.Id, Score = 5,
+                        Comment = "Juda yaxshi mahsulot, sifatli va toza!",
+                        SupplierReply = "Rahmat! Har doim sifatli mahsulot yetkazishga harakat qilamiz.",
+                        RepliedAt = now.AddDays(-3),
+                        CreatedAt = now.AddDays(-6)
+                    });
+                }
+            }
+
+            if (deliveredOrder5 != null)
+            {
+                var items = deliveredOrder5.Items.ToList();
+                int semi = compMap[CompUser5Id];
+
+                if (items.Count > 0)
+                    ratings.Add(new Rating
+                    {
+                        ProductId = items[0].ProductId, ShopId = shop5,
+                        OrderId = deliveredOrder5.Id, Score = 4,
+                        Comment = "Yaxshi, lekin qadoqlash yaxshilanishi kerak.",
+                        CreatedAt = now.AddDays(-4)
+                    });
+
+                if (items.Count > 1)
+                    ratings.Add(new Rating
+                    {
+                        ProductId = items[1].ProductId, ShopId = shop5,
+                        OrderId = deliveredOrder5.Id, Score = 5,
+                        Comment = "Ajoyib ta'm, moli tavsiya etaman!",
+                        SupplierReply = "Fikr-mulohazangiz uchun raxmat!",
+                        RepliedAt = now.AddDays(-2),
+                        CreatedAt = now.AddDays(-5)
+                    });
+
+                if (items.Count > 2)
+                    ratings.Add(new Rating
+                    {
+                        ProductId = items[2].ProductId, ShopId = shop5,
+                        OrderId = deliveredOrder5.Id, Score = 3,
+                        Comment = "O'rtacha, kutganimdan biroz past.",
+                        CreatedAt = now.AddDays(-3)
+                    });
+            }
+
+            if (ratings.Any())
+                ctx.Ratings.AddRange(ratings);
+        }
+
+        // ── CompanyBranches (Filiallar) ────────────────────────────────────────
+        private static async Task SeedCompanyBranchesAsync(AppDbContext ctx)
+        {
+            if (await ctx.CompanyBranches.AnyAsync()) return;
+
+            var dairyId = await ctx.Companies
+                .Where(c => c.UserId == CompUser1Id)
+                .Select(c => c.Id)
+                .FirstOrDefaultAsync();
+
+            if (dairyId == 0) return;
+
+            var now = DateTime.UtcNow;
+
+            ctx.CompanyBranches.AddRange(
+                new CompanyBranch
+                {
+                    CompanyId   = dairyId,
+                    Name        = "Toshkent filiali",
+                    City        = "Toshkent",
+                    Address     = "Yunusobod tumani, 14-uy",
+                    Phone       = "998712345678",
+                    ManagerName = "Aliyev B.",
+                    IsActive    = true,
+                    CreatedAt   = now
+                },
+                new CompanyBranch
+                {
+                    CompanyId   = dairyId,
+                    Name        = "Samarqand filiali",
+                    City        = "Samarqand",
+                    Address     = "Registon ko'chasi, 8-uy",
+                    Phone       = "998662345679",
+                    ManagerName = "Karimov S.",
+                    IsActive    = true,
+                    CreatedAt   = now
+                },
+                new CompanyBranch
+                {
+                    CompanyId   = dairyId,
+                    Name        = "Namangan filiali",
+                    City        = "Namangan",
+                    Address     = "Uychi ko'chasi, 22-uy",
+                    Phone       = "998692345680",
+                    ManagerName = "Xolmatov A.",
+                    IsActive    = false,
+                    CreatedAt   = now
+                }
+            );
+        }
+
+        // ── CompanyDocuments (Hujjatlar) ───────────────────────────────────────
+        private static async Task SeedCompanyDocumentsAsync(AppDbContext ctx)
+        {
+            if (await ctx.CompanyDocuments.AnyAsync()) return;
+
+            var dairyId = await ctx.Companies
+                .Where(c => c.UserId == CompUser1Id)
+                .Select(c => c.Id)
+                .FirstOrDefaultAsync();
+
+            if (dairyId == 0) return;
+
+            var now = DateTime.UtcNow;
+
+            ctx.CompanyDocuments.AddRange(
+                new CompanyDocument
+                {
+                    CompanyId  = dairyId,
+                    Type       = DocumentType.License,
+                    FileName   = "litsenziya_2024.pdf",
+                    FileUrl    = "/documents/litsenziya_2024.pdf",
+                    UploadedAt = now.AddDays(-60),
+                    ExpiryDate = now.AddDays(305)
+                },
+                new CompanyDocument
+                {
+                    CompanyId  = dairyId,
+                    Type       = DocumentType.Certificate,
+                    FileName   = "sifat_sertifikati.pdf",
+                    FileUrl    = "/documents/sifat_sertifikati.pdf",
+                    UploadedAt = now.AddDays(-30),
+                    ExpiryDate = null
+                },
+                new CompanyDocument
+                {
+                    CompanyId  = dairyId,
+                    Type       = DocumentType.Permit,
+                    FileName   = "ruxsatnoma.pdf",
+                    FileUrl    = "/documents/ruxsatnoma.pdf",
+                    UploadedAt = now.AddDays(-90),
+                    ExpiryDate = now.AddDays(-10)  // expired
+                }
+            );
+        }
+
+        // ── ProductStockHistories ──────────────────────────────────────────────
+        private static async Task SeedProductStockHistoriesAsync(AppDbContext ctx)
+        {
+            if (await ctx.ProductStockHistories.AnyAsync()) return;
+
+            var dairyProds = await ctx.Products
+                .Where(p => p.Company.UserId == CompUser1Id)
+                .Take(3)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            if (!dairyProds.Any()) return;
+
+            var now = DateTime.UtcNow;
+            var histories = new List<ProductStockHistory>();
+
+            foreach (var productId in dairyProds)
+            {
+                histories.Add(new ProductStockHistory
+                {
+                    ProductId  = productId,
+                    ChangeType = StockChangeType.Add,
+                    Quantity   = 100,
+                    Reason     = StockReason.NewBatch,
+                    ChangedBy  = AdminUserId,
+                    ChangedAt  = now.AddDays(-15),
+                    Note       = "Yangi partiya keldi"
+                });
+
+                histories.Add(new ProductStockHistory
+                {
+                    ProductId  = productId,
+                    ChangeType = StockChangeType.Add,
+                    Quantity   = 20,
+                    Reason     = StockReason.Returned,
+                    ChangedBy  = AdminUserId,
+                    ChangedAt  = now.AddDays(-7),
+                    Note       = "Do'kondan qaytarildi"
+                });
+            }
+
+            ctx.ProductStockHistories.AddRange(histories);
+        }
+
+        // ── SupplierNotifications ──────────────────────────────────────────────
+        private static async Task SeedSupplierNotificationsAsync(AppDbContext ctx)
+        {
+            if (await ctx.SupplierNotifications.AnyAsync()) return;
+
+            var dairyId = await ctx.Companies
+                .Where(c => c.UserId == CompUser1Id)
+                .Select(c => c.Id)
+                .FirstOrDefaultAsync();
+
+            if (dairyId == 0) return;
+
+            var orderId = await ctx.Orders
+                .Where(o => o.CompanyId == dairyId)
+                .Select(o => (int?)o.Id)
+                .FirstOrDefaultAsync();
+
+            var now = DateTime.UtcNow;
+
+            ctx.SupplierNotifications.AddRange(
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Yangi buyurtma keldi",
+                    Body           = "Navro'z Supermarket dan yangi buyurtma keldi. Jami: 425,000 so'm",
+                    Type           = SupplierNotificationType.NewOrder,
+                    IsRead         = false,
+                    RelatedOrderId = orderId,
+                    CreatedAt      = now.AddMinutes(-15)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Yangi sharh",
+                    Body           = "Navro'z Supermarket 'Sut 3.2%' mahsulotiga 5 yulduz berdi: \"Juda yaxshi mahsulot!\"",
+                    Type           = SupplierNotificationType.NewReview,
+                    IsRead         = false,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddHours(-2)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Kam qoldiq ogohlantirishi",
+                    Body           = "'Qaymoq 20%' mahsulotida faqat 8 ta qoldiq qoldi. Zaxirani to'ldiring.",
+                    Type           = SupplierNotificationType.LowStock,
+                    IsRead         = false,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddHours(-5)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Buyurtma bekor qilindi",
+                    Body           = "Baraka Do'koni buyurtmasi noto'g'ri manzil sababli bekor qilindi.",
+                    Type           = SupplierNotificationType.OrderCancelled,
+                    IsRead         = true,
+                    RelatedOrderId = orderId,
+                    CreatedAt      = now.AddDays(-1)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Yangi buyurtma keldi",
+                    Body           = "Baraka Do'koni dan yangi buyurtma: 100 dona Samarqand noni.",
+                    Type           = SupplierNotificationType.NewOrder,
+                    IsRead         = true,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddDays(-1).AddHours(-3)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Haftalik hisobot tayyor",
+                    Body           = "O'tgan hafta daromad: 12,500,000 so'm. Buyurtmalar: 7 ta. O'rtacha reyting: 4.6",
+                    Type           = SupplierNotificationType.WeeklyReport,
+                    IsRead         = true,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddDays(-3)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Yangi sharh",
+                    Body           = "Farovon Supermarket 'Manti (muzlatilgan)' mahsulotiga 4 yulduz berdi.",
+                    Type           = SupplierNotificationType.NewReview,
+                    IsRead         = true,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddDays(-4)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Kam qoldiq ogohlantirishi",
+                    Body           = "'Tvorog 9%' mahsulotida faqat 5 ta qoldiq qoldi.",
+                    Type           = SupplierNotificationType.LowStock,
+                    IsRead         = true,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddDays(-5)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Yangi buyurtma keldi",
+                    Body           = "Ezgulik Oziq-Ovqat dan yangi buyurtma: Mineral suv va Limonad.",
+                    Type           = SupplierNotificationType.NewOrder,
+                    IsRead         = false,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddDays(-1).AddHours(-1)
+                },
+                new SupplierNotification
+                {
+                    CompanyId      = dairyId,
+                    Title          = "Haftalik hisobot tayyor",
+                    Body           = "2 hafta oldingi daromad: 9,800,000 so'm. Eng ko'p sotilgan: Sut 3.2%",
+                    Type           = SupplierNotificationType.WeeklyReport,
+                    IsRead         = true,
+                    RelatedOrderId = null,
+                    CreatedAt      = now.AddDays(-10)
+                }
+            );
         }
     }
 }

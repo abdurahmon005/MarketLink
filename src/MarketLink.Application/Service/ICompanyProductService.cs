@@ -1,6 +1,7 @@
 using MarketLink.Application.Models.Common;
 using MarketLink.Application.Models.Product;
 using MarketLink.Application.Models.Rating;
+using MarketLink.Application.Models.Supplier;
 using Microsoft.AspNetCore.Http;
 
 namespace MarketLink.Application.Service
@@ -40,5 +41,31 @@ namespace MarketLink.Application.Service
         /// <summary>Bitta mahsulotning o'rtacha reytingi</summary>
         Task<ProductAverageRatingResponse?> GetAverageRatingAsync(
             int productId, int companyId, CancellationToken ct = default);
+
+        // ── Supplier Panel ────────────────────────────────────────────────────
+
+        Task<PagedResult<SupplierProductDto>> GetProductsAsync(
+            int companyId, SupplierProductFilter filter, CancellationToken ct = default);
+
+        Task<SupplierProductDetailDto?> GetProductDetailAsync(
+            int productId, int companyId, CancellationToken ct = default);
+
+        Task<int> CreateProductAsync(
+            int companyId, CreateProductRequest request, CancellationToken ct = default);
+
+        Task<(bool Success, string Message)> UpdateProductAsync(
+            int productId, int companyId, UpdateProductRequest request, CancellationToken ct = default);
+
+        Task<(bool Success, string Message)> DeleteProductAsync(
+            int productId, int companyId, CancellationToken ct = default);
+
+        Task<(bool Success, string Message)> ToggleActiveAsync(
+            int productId, int companyId, CancellationToken ct = default);
+
+        Task<(bool Success, string Message)> UpdateStockAsync(
+            int productId, int companyId, UpdateStockRequest request, Guid changedBy, CancellationToken ct = default);
+
+        Task<List<TopProductDto>> GetTopProductsAsync(
+            int companyId, string period, CancellationToken ct = default);
     }
 }

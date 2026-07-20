@@ -1,7 +1,9 @@
 using MarketLink.Application.Models.Common;
 using MarketLink.Application.Models.Product;
 using MarketLink.Application.Models.Rating;
+using MarketLink.Application.Models.Supplier;
 using MarketLink.DataAccess.Persistence;
+using MarketLink.Domain.Entities;
 using MarketLink.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -290,5 +292,252 @@ namespace MarketLink.Application.Service.Impl
             CreatedAt     = p.CreatedAt,
             UpdatedAt     = p.UpdatedAt
         };
+
+        // ── Supplier Panel Methods ─────────────────────────────────────────────
+
+        public async Task<PagedResult<SupplierProductDto>> GetProductsAsync(
+            int companyId, SupplierProductFilter filter, CancellationToken ct = default)
+        {
+            if (filter.Page < 1) filter.Page = 1;
+            if (filter.PageSize is < 1 or > 100) filter.PageSize = 10;
+
+            var query = _context.Products
+                .AsNoTracking()
+                .Where(p => p.CompanyId == companyId);
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+                query = query.Where(p => p.Name.Contains(filter.Search));
+
+            query = filter.SortBy switch
+            {
+                "price_asc"  => query.OrderBy(p => p.Price),
+                "price_desc" => query.OrderByDescending(p => p.Price),
+                "stock_asc"  => query.OrderBy(p => p.StockQuantity),
+                "name"       => query.OrderBy(p => p.Name),
+                _            => query.OrderByDescending(p => p.CreatedAt)
+            };
+
+            var total = await query.CountAsync(ct);
+
+            var items = await query
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(p => new SupplierProductDto
+                {
+                    Id          = p.Id,
+                    Name        = p.Name,
+                    Category    = p.Company.ProductionType.ToString(),
+                    Price       = p.Price,
+                    PackageSize = p.PackageSize,
+                    StockQty    = p.StockQuantity,
+                    StockStatus = p.StockQuantity == 0 ? "Out"
+                                : p.StockQuantity < 10  ? "Low"
+                                : "In stock",
+                    ImageUrl    = p.ImageUrl,
+                    IsActive    = p.IsActive,
+                    Rating      = p.Ratings.Any() ? p.Ratings.Average(r => (double)r.Score) : 0,
+                    ReviewCount = p.Ratings.Count,
+                    OrderCount  = p.OrderItems
+                        .Where(oi => oi.Order.Status == OrderStatus.Delivered)
+                        .Select(oi => oi.OrderId).Distinct().Count(),
+                    Revenue     = p.OrderItems
+                        .Where(oi => oi.Order.Status == OrderStatus.Delivered)
+                        .Sum(oi => (decimal?)oi.Quantity * oi.UnitPrice) ?? 0
+                })
+                .ToListAsync(ct);
+
+            return new PagedResult<SupplierProductDto>
+            {
+                Items      = items,
+                TotalCount = total,
+                Page       = filter.Page,
+                PageSize   = filter.PageSize
+            };
+        }
+
+        public async Task<SupplierProductDetailDto?> GetProductDetailAsync(
+            int productId, int companyId, CancellationToken ct = default)
+        {
+            var p = await _context.Products
+                .AsNoTracking()
+                .Include(x => x.Ratings)
+                .Include(x => x.Company)
+                .Include(x => x.OrderItems).ThenInclude(oi => oi.Order)
+                .FirstOrDefaultAsync(x => x.Id == productId && x.CompanyId == companyId, ct);
+
+            if (p == null) return null;
+
+            var last30 = DateTime.UtcNow.AddDays(-30);
+            var salesChart = p.OrderItems
+                .Where(oi => oi.Order.Status == OrderStatus.Delivered && oi.Order.CreatedAt >= last30)
+                .GroupBy(oi => oi.Order.CreatedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new DailySalesDto
+                {
+                    Date     = g.Key.ToString("yyyy-MM-dd"),
+                    Quantity = g.Sum(x => x.Quantity),
+                    Revenue  = g.Sum(x => x.Quantity * x.UnitPrice)
+                })
+                .ToList();
+
+            var breakdown = new RatingBreakdownDto
+            {
+                Five  = p.Ratings.Count(r => r.Score == 5),
+                Four  = p.Ratings.Count(r => r.Score == 4),
+                Three = p.Ratings.Count(r => r.Score == 3),
+                Two   = p.Ratings.Count(r => r.Score == 2),
+                One   = p.Ratings.Count(r => r.Score == 1)
+            };
+
+            return new SupplierProductDetailDto
+            {
+                Id          = p.Id,
+                Name        = p.Name,
+                Description = p.Description,
+                Category    = p.Company.ProductionType.ToString(),
+                Price       = p.Price,
+                PackageSize = p.PackageSize,
+                StockQty    = p.StockQuantity,
+                StockStatus = p.StockQuantity == 0 ? "Out"
+                            : p.StockQuantity < 10  ? "Low"
+                            : "In stock",
+                ImageUrl    = p.ImageUrl,
+                IsActive    = p.IsActive,
+                Rating      = p.Ratings.Any() ? p.Ratings.Average(r => (double)r.Score) : 0,
+                ReviewCount = p.Ratings.Count,
+                OrderCount  = p.OrderItems
+                    .Where(oi => oi.Order.Status == OrderStatus.Delivered)
+                    .Select(oi => oi.OrderId).Distinct().Count(),
+                Revenue     = p.OrderItems
+                    .Where(oi => oi.Order.Status == OrderStatus.Delivered)
+                    .Sum(oi => oi.Quantity * oi.UnitPrice),
+                SalesChart     = salesChart,
+                RatingBreakdown = breakdown
+            };
+        }
+
+        public async Task<int> CreateProductAsync(
+            int companyId, CreateProductRequest request, CancellationToken ct = default)
+        {
+            var (_, _, created) = await CreateAsync(companyId, request, ct);
+            return created?.Id ?? 0;
+        }
+
+        public async Task<(bool Success, string Message)> UpdateProductAsync(
+            int productId, int companyId, UpdateProductRequest request, CancellationToken ct = default)
+            => await UpdateAsync(productId, companyId, request, ct);
+
+        public async Task<(bool Success, string Message)> DeleteProductAsync(
+            int productId, int companyId, CancellationToken ct = default)
+            => await DeleteAsync(productId, companyId, ct);
+
+        public async Task<(bool Success, string Message)> ToggleActiveAsync(
+            int productId, int companyId, CancellationToken ct = default)
+        {
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == productId && p.CompanyId == companyId, ct);
+
+            if (product == null)
+                return (false, "Mahsulot topilmadi yoki sizga tegishli emas");
+
+            product.IsActive  = !product.IsActive;
+            product.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(ct);
+
+            return (true, product.IsActive ? "Mahsulot faollashtirildi" : "Mahsulot o'chirildi");
+        }
+
+        public async Task<(bool Success, string Message)> UpdateStockAsync(
+            int productId, int companyId, UpdateStockRequest request, Guid changedBy, CancellationToken ct = default)
+        {
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == productId && p.CompanyId == companyId, ct);
+
+            if (product == null)
+                return (false, "Mahsulot topilmadi yoki sizga tegishli emas");
+
+            if (request.Quantity <= 0)
+                return (false, "Miqdor 0 dan katta bo'lishi kerak");
+
+            var changeType = request.ChangeType.ToLowerInvariant() == "set"
+                ? StockChangeType.Set
+                : StockChangeType.Add;
+
+            var oldQty     = product.StockQuantity;
+            product.StockQuantity = changeType == StockChangeType.Set
+                ? request.Quantity
+                : product.StockQuantity + request.Quantity;
+            product.UpdatedAt = DateTime.UtcNow;
+
+            if (!Enum.TryParse<StockReason>(request.Reason, true, out var reason))
+                reason = StockReason.Correction;
+
+            _context.ProductStockHistories.Add(new ProductStockHistory
+            {
+                ProductId  = productId,
+                ChangeType = changeType,
+                Quantity   = request.Quantity,
+                Reason     = reason,
+                ChangedBy  = changedBy,
+                ChangedAt  = DateTime.UtcNow,
+                Note       = request.Note
+            });
+
+            await _context.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "Stock updated: ProductId={ProductId}, {Old}→{New}, By={UserId}",
+                productId, oldQty, product.StockQuantity, changedBy);
+
+            return (true, $"Qoldiq yangilandi: {oldQty} → {product.StockQuantity}");
+        }
+
+        public async Task<List<TopProductDto>> GetTopProductsAsync(
+            int companyId, string period, CancellationToken ct = default)
+        {
+            var (from, to) = GetPeriodRange(period);
+
+            var data = await _context.OrderItems
+                .AsNoTracking()
+                .Where(oi => oi.Order.CompanyId == companyId
+                          && oi.Order.Status == OrderStatus.Delivered
+                          && oi.Order.CreatedAt >= from
+                          && oi.Order.CreatedAt < to)
+                .GroupBy(oi => new { oi.ProductId, oi.Product.Name })
+                .Select(g => new
+                {
+                    g.Key.ProductId,
+                    g.Key.Name,
+                    OrderCount = g.Select(x => x.OrderId).Distinct().Count(),
+                    Revenue    = g.Sum(x => (decimal)x.Quantity * x.UnitPrice)
+                })
+                .OrderByDescending(x => x.Revenue)
+                .Take(10)
+                .ToListAsync(ct);
+
+            var totalRevenue = data.Sum(x => x.Revenue);
+
+            return data.Select((x, i) => new TopProductDto
+            {
+                ProductId  = x.ProductId,
+                Name       = x.Name,
+                OrderCount = x.OrderCount,
+                Revenue    = x.Revenue,
+                Percentage = totalRevenue > 0
+                    ? Math.Round(x.Revenue / totalRevenue * 100, 1) : 0
+            }).ToList();
+        }
+
+        private static (DateTime From, DateTime To) GetPeriodRange(string period)
+        {
+            var now = DateTime.UtcNow;
+            return period?.ToLowerInvariant() switch
+            {
+                "day"   => (now.Date, now.Date.AddDays(1)),
+                "month" => (now.AddDays(-30), now),
+                "year"  => (now.AddDays(-365), now),
+                _       => (now.AddDays(-7), now)   // default: week
+            };
+        }
     }
 }

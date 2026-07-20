@@ -99,6 +99,7 @@ namespace MarketLink.API
             builder.Services.AddScoped<ITrackingService, TrackingService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<ISupplierNotificationService, SupplierNotificationService>();
 
             // ── Unit of Work / Repositories ──
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

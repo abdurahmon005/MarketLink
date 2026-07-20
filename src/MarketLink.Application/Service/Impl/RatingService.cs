@@ -1,5 +1,6 @@
 using MarketLink.Application.Models.Common;
 using MarketLink.Application.Models.Rating;
+using MarketLink.Application.Models.Supplier;
 using MarketLink.DataAccess.Persistence;
 using MarketLink.Domain.Entities;
 using MarketLink.Domain.Enums;
@@ -117,6 +118,181 @@ namespace MarketLink.Application.Service.Impl
 
             product.AverageRating = avgScore;
             await _context.SaveChangesAsync(ct);
+        }
+
+        // ── Supplier Panel Methods ─────────────────────────────────────────────
+
+        public async Task<RatingSummaryDto> GetProductRatingSummaryAsync(
+            int productId, CancellationToken ct = default)
+        {
+            var ratings = await _context.Ratings
+                .AsNoTracking()
+                .Where(r => r.ProductId == productId)
+                .Select(r => r.Score)
+                .ToListAsync(ct);
+
+            return BuildSummary(ratings);
+        }
+
+        public async Task<PagedResult<ProductReviewDto>> GetProductReviewsAsync(
+            int productId, ReviewFilter filter, CancellationToken ct = default)
+        {
+            if (filter.Page < 1) filter.Page = 1;
+            if (filter.PageSize is < 1 or > 50) filter.PageSize = 10;
+
+            var query = _context.Ratings
+                .AsNoTracking()
+                .Where(r => r.ProductId == productId);
+
+            if (filter.Rating.HasValue)
+                query = query.Where(r => r.Score == filter.Rating.Value);
+
+            if (filter.Answered.HasValue)
+                query = filter.Answered.Value
+                    ? query.Where(r => r.SupplierReply != null)
+                    : query.Where(r => r.SupplierReply == null);
+
+            var total = await query.CountAsync(ct);
+
+            var items = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(r => new ProductReviewDto
+                {
+                    Id            = r.Id,
+                    ShopName      = r.Shop.ShopName,
+                    ProductName   = r.Product.Name,
+                    Rating        = r.Score,
+                    Comment       = r.Comment,
+                    SupplierReply = r.SupplierReply,
+                    RepliedAt     = r.RepliedAt,
+                    CreatedAt     = r.CreatedAt,
+                    TimeAgo       = CalcTimeAgo(r.CreatedAt)
+                })
+                .ToListAsync(ct);
+
+            return new PagedResult<ProductReviewDto>
+            {
+                Items      = items,
+                TotalCount = total,
+                Page       = filter.Page,
+                PageSize   = filter.PageSize
+            };
+        }
+
+        public async Task<PagedResult<ProductReviewDto>> GetCompanyReviewsAsync(
+            int companyId, ReviewFilter filter, CancellationToken ct = default)
+        {
+            if (filter.Page < 1) filter.Page = 1;
+            if (filter.PageSize is < 1 or > 50) filter.PageSize = 10;
+
+            var query = _context.Ratings
+                .AsNoTracking()
+                .Where(r => r.Product.CompanyId == companyId);
+
+            if (filter.Rating.HasValue)
+                query = query.Where(r => r.Score == filter.Rating.Value);
+
+            if (filter.Answered.HasValue)
+                query = filter.Answered.Value
+                    ? query.Where(r => r.SupplierReply != null)
+                    : query.Where(r => r.SupplierReply == null);
+
+            var total = await query.CountAsync(ct);
+
+            var items = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(r => new ProductReviewDto
+                {
+                    Id            = r.Id,
+                    ShopName      = r.Shop.ShopName,
+                    ProductName   = r.Product.Name,
+                    Rating        = r.Score,
+                    Comment       = r.Comment,
+                    SupplierReply = r.SupplierReply,
+                    RepliedAt     = r.RepliedAt,
+                    CreatedAt     = r.CreatedAt,
+                    TimeAgo       = CalcTimeAgo(r.CreatedAt)
+                })
+                .ToListAsync(ct);
+
+            return new PagedResult<ProductReviewDto>
+            {
+                Items      = items,
+                TotalCount = total,
+                Page       = filter.Page,
+                PageSize   = filter.PageSize
+            };
+        }
+
+        public async Task<(bool Success, string Message)> ReplyToReviewAsync(
+            int reviewId, int companyId, string reply, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(reply))
+                return (false, "Javob bo'sh bo'lmasligi kerak");
+
+            if (reply.Length > 500)
+                return (false, "Javob 500 belgidan oshmasligi kerak");
+
+            var rating = await _context.Ratings
+                .FirstOrDefaultAsync(r => r.Id == reviewId && r.Product.CompanyId == companyId, ct);
+
+            if (rating == null)
+                return (false, "Reyting topilmadi yoki sizga tegishli emas");
+
+            if (rating.SupplierReply != null)
+                return (false, "Bu reytingga allaqachon javob berilgan");
+
+            rating.SupplierReply = reply;
+            rating.RepliedAt     = DateTime.UtcNow;
+            await _context.SaveChangesAsync(ct);
+
+            return (true, "Javob muvaffaqiyatli saqlandi");
+        }
+
+        public async Task<RatingSummaryDto> GetCompanyRatingSummaryAsync(
+            int companyId, CancellationToken ct = default)
+        {
+            var ratings = await _context.Ratings
+                .AsNoTracking()
+                .Where(r => r.Product.CompanyId == companyId)
+                .Select(r => r.Score)
+                .ToListAsync(ct);
+
+            return BuildSummary(ratings);
+        }
+
+        private static RatingSummaryDto BuildSummary(List<int> scores)
+        {
+            if (!scores.Any())
+                return new RatingSummaryDto { AverageRating = 0, TotalCount = 0 };
+
+            return new RatingSummaryDto
+            {
+                AverageRating = Math.Round(scores.Average(), 2),
+                TotalCount    = scores.Count,
+                Breakdown     = new RatingCountDto
+                {
+                    Five  = scores.Count(s => s == 5),
+                    Four  = scores.Count(s => s == 4),
+                    Three = scores.Count(s => s == 3),
+                    Two   = scores.Count(s => s == 2),
+                    One   = scores.Count(s => s == 1)
+                }
+            };
+        }
+
+        private static string CalcTimeAgo(DateTime createdAt)
+        {
+            var diff = DateTime.UtcNow - createdAt;
+            if (diff.TotalMinutes < 1)  return "Hozirgina";
+            if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes} min oldin";
+            if (diff.TotalHours   < 24) return $"{(int)diff.TotalHours} soat oldin";
+            if (diff.TotalDays    < 30) return $"{(int)diff.TotalDays} kun oldin";
+            return $"{(int)(diff.TotalDays / 30)} oy oldin";
         }
     }
 }

@@ -29,6 +29,10 @@ namespace MarketLink.DataAccess.Persistence
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<DeviceToken> DeviceTokens { get; set; }
+        public DbSet<ProductStockHistory> ProductStockHistories { get; set; }
+        public DbSet<CompanyBranch> CompanyBranches { get; set; }
+        public DbSet<CompanyDocument> CompanyDocuments { get; set; }
+        public DbSet<SupplierNotification> SupplierNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder mb)
         {
@@ -220,6 +224,56 @@ namespace MarketLink.DataAccess.Persistence
                     .OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex(d => d.Token).IsUnique();
                 e.Property(d => d.Platform).HasConversion<string>();
+            });
+
+            // ── ProductStockHistory ──
+            mb.Entity<ProductStockHistory>(e =>
+            {
+                e.HasOne(h => h.Product)
+                    .WithMany()
+                    .HasForeignKey(h => h.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(h => h.ChangedByUser)
+                    .WithMany()
+                    .HasForeignKey(h => h.ChangedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+                e.Property(h => h.ChangeType).HasConversion<string>();
+                e.Property(h => h.Reason).HasConversion<string>();
+            });
+
+            // ── CompanyBranch ──
+            mb.Entity<CompanyBranch>(e =>
+            {
+                e.HasOne(b => b.Company)
+                    .WithMany()
+                    .HasForeignKey(b => b.CompanyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ── CompanyDocument ──
+            mb.Entity<CompanyDocument>(e =>
+            {
+                e.HasOne(d => d.Company)
+                    .WithMany()
+                    .HasForeignKey(d => d.CompanyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.Property(d => d.Type).HasConversion<string>();
+            });
+
+            // ── SupplierNotification ──
+            mb.Entity<SupplierNotification>(e =>
+            {
+                e.HasOne(n => n.Company)
+                    .WithMany()
+                    .HasForeignKey(n => n.CompanyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(n => n.RelatedOrder)
+                    .WithMany()
+                    .HasForeignKey(n => n.RelatedOrderId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.SetNull);
+                e.Property(n => n.Type).HasConversion<string>();
+                e.HasIndex(n => new { n.CompanyId, n.IsRead });
             });
         }
     }
