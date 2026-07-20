@@ -48,9 +48,8 @@ namespace MarketLink.API.Controllers
 
         /// <summary>Do'kon logo va sertifikatini yangilash</summary>
         [HttpPut("media")]
-        [Consumes("multipart/form-data")]
         public async Task<IActionResult> UpdateMedia(
-            [FromForm] IFormFile? logo, [FromForm] IFormFile? certificate, CancellationToken ct)
+            IFormFile? logo, IFormFile? certificate, CancellationToken ct)
         {
             var userId = GetUserId();
             if (userId == null) return Forbid();

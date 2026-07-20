@@ -151,7 +151,7 @@ namespace MarketLink.API.Controllers
         [HttpPost("{id:int}/image")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UpdateImage(
-            int id, [FromForm] IFormFile file, CancellationToken ct = default)
+            int id, IFormFile file, CancellationToken ct = default)
         {
             var companyId = GetCompanyId();
             if (companyId == null) return Unauthorized();

@@ -57,7 +57,7 @@ namespace MarketLink.API.Controllers
 
         [HttpPut("logo")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UpdateLogo([FromForm] IFormFile file, CancellationToken ct = default)
+        public async Task<IActionResult> UpdateLogo(IFormFile file, CancellationToken ct = default)
         {
             var companyId = GetCompanyId();
             if (companyId == null) return Unauthorized();
