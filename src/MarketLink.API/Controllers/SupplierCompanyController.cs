@@ -7,6 +7,13 @@ using System.Security.Claims;
 
 namespace MarketLink.API.Controllers
 {
+    public class UploadDocumentFormRequest
+    {
+        public IFormFile File { get; set; } = null!;
+        public MarketLink.Domain.Enums.DocumentType DocumentType { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+    }
+
     [ApiController]
     [Route("api/supplier/company")]
     [Authorize(Roles = "Company,Admin")]
@@ -50,7 +57,7 @@ namespace MarketLink.API.Controllers
 
         [HttpPut("logo")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UpdateLogo(IFormFile file, CancellationToken ct = default)
+        public async Task<IActionResult> UpdateLogo([FromForm] IFormFile file, CancellationToken ct = default)
         {
             var companyId = GetCompanyId();
             if (companyId == null) return Unauthorized();
@@ -124,28 +131,26 @@ namespace MarketLink.API.Controllers
         [HttpPost("documents")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadDocument(
-            [FromForm] IFormFile file,
-            [FromForm] Domain.Enums.DocumentType documentType,
-            [FromForm] DateTime? expiryDate,
+            [FromForm] UploadDocumentFormRequest form,
             CancellationToken ct = default)
         {
             var companyId = GetCompanyId();
             if (companyId == null) return Unauthorized();
 
-            if (file == null || file.Length == 0)
+            if (form.File == null || form.File.Length == 0)
                 return BadRequest(new ApiResponse<object> { Success = false, Message = "Fayl tanlanmagan" });
 
             var userId = GetCurrentUserId();
             if (userId == null) return Unauthorized();
 
-            var upload = await _fileService.UploadAsync(file, Domain.Enums.FileType.Certificate, userId.Value, ct);
+            var upload = await _fileService.UploadAsync(form.File, Domain.Enums.FileType.Certificate, userId.Value, ct);
 
             var request = new UploadDocumentRequest
             {
-                DocumentType = documentType,
-                FileName     = file.FileName,
+                DocumentType = form.DocumentType,
+                FileName     = form.File.FileName,
                 FileUrl      = upload.Url ?? upload.ObjectPath,
-                ExpiryDate   = expiryDate
+                ExpiryDate   = form.ExpiryDate
             };
 
             var docId = await _companyService.UploadDocumentAsync(companyId.Value, request, ct);

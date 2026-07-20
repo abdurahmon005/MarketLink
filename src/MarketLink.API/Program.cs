@@ -178,6 +178,7 @@ namespace MarketLink.API
                     });
 
                     c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+                    c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
                 });
 
             // ── CORS ──
@@ -253,6 +254,8 @@ namespace MarketLink.API
                 JwtAudience   = cfg["Jwt:Audience"],
                 Environment   = cfg["ASPNETCORE_ENVIRONMENT"]
             });
+
+            app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
             app.MapControllers();
 
