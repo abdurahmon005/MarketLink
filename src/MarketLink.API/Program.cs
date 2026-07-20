@@ -63,6 +63,25 @@ namespace MarketLink.API
                             ctx.Token = accessToken;
                         }
                         return Task.CompletedTask;
+                    },
+                    OnChallenge = async ctx =>
+                    {
+                        ctx.HandleResponse();
+                        ctx.Response.StatusCode  = 401;
+                        ctx.Response.ContentType = "application/json";
+                        await ctx.Response.WriteAsync(
+                            System.Text.Json.JsonSerializer.Serialize(
+                                new { success = false, message = "Autentifikatsiya talab qilinadi. Token yo'q yoki muddati o'tgan." },
+                                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
+                    },
+                    OnForbidden = async ctx =>
+                    {
+                        ctx.Response.StatusCode  = 403;
+                        ctx.Response.ContentType = "application/json";
+                        await ctx.Response.WriteAsync(
+                            System.Text.Json.JsonSerializer.Serialize(
+                                new { success = false, message = "Bu amalni bajarishga ruxsat yo'q." },
+                                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
                     }
                 };
             });

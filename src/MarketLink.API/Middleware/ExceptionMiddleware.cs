@@ -1,5 +1,6 @@
 using MarketLink.API.Common;
 using MarketLink.API.Exceptions;
+using Microsoft.IdentityModel.Tokens;
 using System.Net;
 using System.Text.Json;
 
@@ -32,13 +33,14 @@ namespace MarketLink.API.Middleware
         {
             var (statusCode, message) = exception switch
             {
-                NotFoundException          => (HttpStatusCode.NotFound,            exception.Message),
-                ForbiddenException         => (HttpStatusCode.Forbidden,           exception.Message),
-                BadRequestException        => (HttpStatusCode.BadRequest,          exception.Message),
-                ConflictException          => (HttpStatusCode.Conflict,            exception.Message),
-                UnauthorizedAccessException => (HttpStatusCode.Unauthorized,       exception.Message),
-                ArgumentException          => (HttpStatusCode.BadRequest,          exception.Message),
-                _                          => (HttpStatusCode.InternalServerError, "Ichki server xatosi yuz berdi")
+                NotFoundException           => (HttpStatusCode.NotFound,            exception.Message),
+                ForbiddenException          => (HttpStatusCode.Forbidden,           exception.Message),
+                BadRequestException         => (HttpStatusCode.BadRequest,          exception.Message),
+                ConflictException           => (HttpStatusCode.Conflict,            exception.Message),
+                UnauthorizedAccessException => (HttpStatusCode.Unauthorized,        exception.Message),
+                SecurityTokenException      => (HttpStatusCode.Unauthorized,        "Token yaroqsiz yoki muddati o'tgan"),
+                ArgumentException           => (HttpStatusCode.BadRequest,          exception.Message),
+                _                           => (HttpStatusCode.InternalServerError, "Ichki server xatosi yuz berdi")
             };
 
             if (statusCode == HttpStatusCode.InternalServerError)

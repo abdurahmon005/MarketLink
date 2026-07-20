@@ -27,7 +27,6 @@ namespace MarketLink.Application.Service.Impl
                 .AsNoTracking()
                 .Where(p => p.IsActive)
                 .Include(p => p.Company)
-                .Include(p => p.Ratings)
                 .AsQueryable();
 
             if (filter.CompanyId.HasValue)
@@ -45,15 +44,15 @@ namespace MarketLink.Application.Service.Impl
             if (!string.IsNullOrWhiteSpace(filter.Search))
                 query = query.Where(p => EF.Functions.ILike(p.Name, $"%{filter.Search}%"));
 
-            // Saralash
+            // Saralash — AverageRating cached field ishlatiladi (p.Ratings.Average() EF Core da translate bo'lmaydi)
             query = (filter.SortBy?.ToLower(), filter.SortOrder?.ToLower()) switch
             {
                 ("price",     "asc")  => query.OrderBy(p => p.Price),
                 ("price",     _)      => query.OrderByDescending(p => p.Price),
                 ("name",      "asc")  => query.OrderBy(p => p.Name),
                 ("name",      _)      => query.OrderByDescending(p => p.Name),
-                ("rating",    "asc")  => query.OrderBy(p => p.Ratings.Average(r => (double?)r.Score) ?? 0),
-                ("rating",    _)      => query.OrderByDescending(p => p.Ratings.Average(r => (double?)r.Score) ?? 0),
+                ("rating",    "asc")  => query.OrderBy(p => p.AverageRating),
+                ("rating",    _)      => query.OrderByDescending(p => p.AverageRating),
                 ("createdat", "asc")  => query.OrderBy(p => p.CreatedAt),
                 _                     => query.OrderByDescending(p => p.CreatedAt)
             };
@@ -74,8 +73,7 @@ namespace MarketLink.Application.Service.Impl
                     ImageUrl         = p.ImageUrl,
                     PackageSize      = p.PackageSize,
                     StockQuantity    = p.StockQuantity,
-                    AverageRating    = p.Ratings.Any()
-                        ? p.Ratings.Average(r => (double)r.Score) : 0,
+                    AverageRating    = p.AverageRating,
                     RatingCount      = p.Ratings.Count,
                     CreatedAt        = p.CreatedAt
                 })
