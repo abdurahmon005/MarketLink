@@ -94,8 +94,7 @@ namespace MarketLink.Application.Service.Impl
                     PackageSize   = p.PackageSize,
                     StockQuantity = p.StockQuantity,
                     IsActive      = p.IsActive,
-                    AverageRating = p.Ratings.Any()
-                        ? p.Ratings.Average(r => (double)r.Score) : 0,
+                    AverageRating = p.AverageRating,
                     RatingCount   = p.Ratings.Count,
                     CreatedAt     = p.CreatedAt,
                     UpdatedAt     = p.UpdatedAt
@@ -209,8 +208,7 @@ namespace MarketLink.Application.Service.Impl
                     SoldQuantity  = p.OrderItems
                         .Where(oi => oi.Order.Status == OrderStatus.Delivered)
                         .Sum(oi => oi.Quantity),
-                    AverageRating = p.Ratings.Any()
-                        ? p.Ratings.Average(r => (double)r.Score) : 0,
+                    AverageRating = p.AverageRating,
                     IsActive      = p.IsActive
                 })
                 .OrderBy(p => p.StockQuantity)
@@ -335,7 +333,7 @@ namespace MarketLink.Application.Service.Impl
                                 : "In stock",
                     ImageUrl    = p.ImageUrl,
                     IsActive    = p.IsActive,
-                    Rating      = p.Ratings.Any() ? p.Ratings.Average(r => (double)r.Score) : 0,
+                    Rating      = p.AverageRating,
                     ReviewCount = p.Ratings.Count,
                     OrderCount  = p.OrderItems
                         .Where(oi => oi.Order.Status == OrderStatus.Delivered)

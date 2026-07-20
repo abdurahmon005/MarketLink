@@ -36,22 +36,27 @@ namespace MarketLink.Application.Service.Impl
 
             var total = await query.CountAsync(ct);
 
-            var items = await query
+            var rows = await query
                 .OrderByDescending(n => n.CreatedAt)
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(n => new SupplierNotificationDto
+                .Select(n => new
                 {
-                    Id             = n.Id,
-                    Title          = n.Title,
-                    Body           = n.Body,
-                    Type           = n.Type,
-                    IsRead         = n.IsRead,
-                    RelatedOrderId = n.RelatedOrderId,
-                    CreatedAt      = n.CreatedAt,
-                    TimeAgo        = CalcTimeAgo(n.CreatedAt)
+                    n.Id, n.Title, n.Body, n.Type, n.IsRead, n.RelatedOrderId, n.CreatedAt
                 })
                 .ToListAsync(ct);
+
+            var items = rows.Select(n => new SupplierNotificationDto
+            {
+                Id             = n.Id,
+                Title          = n.Title,
+                Body           = n.Body,
+                Type           = n.Type,
+                IsRead         = n.IsRead,
+                RelatedOrderId = n.RelatedOrderId,
+                CreatedAt      = n.CreatedAt,
+                TimeAgo        = CalcTimeAgo(n.CreatedAt)
+            }).ToList();
 
             return new PagedResult<SupplierNotificationDto>
             {

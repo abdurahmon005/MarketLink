@@ -75,15 +75,11 @@ namespace MarketLink.Application.Service.Impl
                 .OrderByDescending(x => x.Count)
                 .FirstOrDefaultAsync(ct);
 
-            // Reytingi eng past mahsulot
+            // Reytingi eng past mahsulot (cached AverageRating ishlatiladi)
             var lowestRated = await _context.Products
                 .AsNoTracking()
-                .Where(p => p.CompanyId == companyId && p.Ratings.Any())
-                .Select(p => new
-                {
-                    p.Name,
-                    Avg = p.Ratings.Average(r => (double)r.Score)
-                })
+                .Where(p => p.CompanyId == companyId && p.AverageRating > 0)
+                .Select(p => new { p.Name, Avg = p.AverageRating })
                 .OrderBy(x => x.Avg)
                 .FirstOrDefaultAsync(ct);
 
@@ -184,21 +180,22 @@ namespace MarketLink.Application.Service.Impl
         {
             var (from, to) = GetPeriodRange(period);
 
-            var data = await _context.Orders
+            // ToString("yyyy-MM-dd") EF Core da SQL ga translate bo'lmaydi — memory da qilinadi
+            var raw = await _context.Orders
                 .AsNoTracking()
                 .Where(o => o.CompanyId == companyId && o.Status == OrderStatus.Delivered
                          && o.CreatedAt >= from && o.CreatedAt < to)
                 .GroupBy(o => o.CreatedAt.Date)
-                .Select(g => new RevenueChartPointDto
-                {
-                    Date       = g.Key.ToString("yyyy-MM-dd"),
-                    Revenue    = g.Sum(x => x.TotalAmount),
-                    OrderCount = g.Count()
-                })
+                .Select(g => new { Date = g.Key, Revenue = g.Sum(x => x.TotalAmount), OrderCount = g.Count() })
                 .OrderBy(x => x.Date)
                 .ToListAsync(ct);
 
-            return data;
+            return raw.Select(x => new RevenueChartPointDto
+            {
+                Date       = x.Date.ToString("yyyy-MM-dd"),
+                Revenue    = x.Revenue,
+                OrderCount = x.OrderCount
+            }).ToList();
         }
 
         public async Task<List<TopBuyerDto>> GetTopBuyersAsync(
@@ -235,23 +232,24 @@ namespace MarketLink.Application.Service.Impl
         {
             if (limit is < 1 or > 100) limit = 20;
 
-            var orders = await _context.Orders
+            // CalcTimeAgo C# metodi SQL ga translate bo'lmaydi — memory da qilinadi
+            var rows = await _context.Orders
                 .AsNoTracking()
                 .Where(o => o.CompanyId == companyId)
                 .OrderByDescending(o => o.UpdatedAt)
                 .Take(limit)
-                .Select(o => new ActivityDto
-                {
-                    Id        = o.Id.ToString(),
-                    Type      = "order",
-                    Message   = $"#{o.Id:D6} buyurtma — {o.Status}",
-                    RelatedId = o.Id.ToString(),
-                    CreatedAt = o.UpdatedAt,
-                    TimeAgo   = CalcTimeAgo(o.UpdatedAt)
-                })
+                .Select(o => new { o.Id, o.Status, o.UpdatedAt })
                 .ToListAsync(ct);
 
-            return orders;
+            return rows.Select(o => new ActivityDto
+            {
+                Id        = o.Id.ToString(),
+                Type      = "order",
+                Message   = $"#{o.Id:D6} buyurtma — {o.Status}",
+                RelatedId = o.Id.ToString(),
+                CreatedAt = o.UpdatedAt,
+                TimeAgo   = CalcTimeAgo(o.UpdatedAt)
+            }).ToList();
         }
 
         private static (DateTime From, DateTime To) GetPeriodRange(string period, bool previous = false)

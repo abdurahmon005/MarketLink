@@ -74,7 +74,7 @@ namespace MarketLink.Application.Service.Impl
                     ValidateLifetime         = true,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey)),
-                    ClockSkew                = TimeSpan.Zero
+                    ClockSkew                = TimeSpan.FromMinutes(5)
                 }, out _);
 
                 return principal;

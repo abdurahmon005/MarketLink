@@ -47,7 +47,7 @@ namespace MarketLink.API
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey         = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(secretKey)),
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.FromMinutes(5)
                 };
 
                 // Allow JWT via query string for SignalR WebSocket connections

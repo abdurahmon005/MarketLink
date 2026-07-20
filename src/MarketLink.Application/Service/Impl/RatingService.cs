@@ -154,23 +154,30 @@ namespace MarketLink.Application.Service.Impl
 
             var total = await query.CountAsync(ct);
 
-            var items = await query
+            var rows = await query
                 .OrderByDescending(r => r.CreatedAt)
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(r => new ProductReviewDto
+                .Select(r => new
                 {
-                    Id            = r.Id,
-                    ShopName      = r.Shop.ShopName,
-                    ProductName   = r.Product.Name,
-                    Rating        = r.Score,
-                    Comment       = r.Comment,
-                    SupplierReply = r.SupplierReply,
-                    RepliedAt     = r.RepliedAt,
-                    CreatedAt     = r.CreatedAt,
-                    TimeAgo       = CalcTimeAgo(r.CreatedAt)
+                    r.Id, r.Score, r.Comment, r.SupplierReply, r.RepliedAt, r.CreatedAt,
+                    ShopName    = r.Shop.ShopName,
+                    ProductName = r.Product.Name
                 })
                 .ToListAsync(ct);
+
+            var items = rows.Select(r => new ProductReviewDto
+            {
+                Id            = r.Id,
+                ShopName      = r.ShopName,
+                ProductName   = r.ProductName,
+                Rating        = r.Score,
+                Comment       = r.Comment,
+                SupplierReply = r.SupplierReply,
+                RepliedAt     = r.RepliedAt,
+                CreatedAt     = r.CreatedAt,
+                TimeAgo       = CalcTimeAgo(r.CreatedAt)
+            }).ToList();
 
             return new PagedResult<ProductReviewDto>
             {
@@ -201,27 +208,34 @@ namespace MarketLink.Application.Service.Impl
 
             var total = await query.CountAsync(ct);
 
-            var items = await query
+            var rows2 = await query
                 .OrderByDescending(r => r.CreatedAt)
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(r => new ProductReviewDto
+                .Select(r => new
                 {
-                    Id            = r.Id,
-                    ShopName      = r.Shop.ShopName,
-                    ProductName   = r.Product.Name,
-                    Rating        = r.Score,
-                    Comment       = r.Comment,
-                    SupplierReply = r.SupplierReply,
-                    RepliedAt     = r.RepliedAt,
-                    CreatedAt     = r.CreatedAt,
-                    TimeAgo       = CalcTimeAgo(r.CreatedAt)
+                    r.Id, r.Score, r.Comment, r.SupplierReply, r.RepliedAt, r.CreatedAt,
+                    ShopName    = r.Shop.ShopName,
+                    ProductName = r.Product.Name
                 })
                 .ToListAsync(ct);
 
+            var items2 = rows2.Select(r => new ProductReviewDto
+            {
+                Id            = r.Id,
+                ShopName      = r.ShopName,
+                ProductName   = r.ProductName,
+                Rating        = r.Score,
+                Comment       = r.Comment,
+                SupplierReply = r.SupplierReply,
+                RepliedAt     = r.RepliedAt,
+                CreatedAt     = r.CreatedAt,
+                TimeAgo       = CalcTimeAgo(r.CreatedAt)
+            }).ToList();
+
             return new PagedResult<ProductReviewDto>
             {
-                Items      = items,
+                Items      = items2,
                 TotalCount = total,
                 Page       = filter.Page,
                 PageSize   = filter.PageSize
