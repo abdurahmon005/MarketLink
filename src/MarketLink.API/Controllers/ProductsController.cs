@@ -77,8 +77,9 @@ namespace MarketLink.API.Controllers
 
         /// <summary>Mahsulot rasmini yangilash</summary>
         [HttpPut("{id:int}/image")]
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> UpdateProductImage(
-            int id, IFormFile image, CancellationToken ct)
+            int id, [FromForm] IFormFile image, CancellationToken ct)
         {
             var companyId = GetProfileId();
             if (companyId == null) return Forbid();

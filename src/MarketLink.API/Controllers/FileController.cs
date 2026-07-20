@@ -23,7 +23,7 @@ namespace MarketLink.API.Controllers
  
         [HttpPost("logo")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadLogo(IFormFile file, CancellationToken ct)
+        public async Task<IActionResult> UploadLogo([FromForm] IFormFile file, CancellationToken ct)
         {
             return await UploadFile(file, FileType.Logo, ct);
         }
@@ -31,21 +31,21 @@ namespace MarketLink.API.Controllers
         /// <summary>Sertifikat yuklash</summary>
         [HttpPost("certificate")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadCertificate(IFormFile file, CancellationToken ct)
+        public async Task<IActionResult> UploadCertificate([FromForm] IFormFile file, CancellationToken ct)
         {
             return await UploadFile(file, FileType.Certificate, ct);
         }
 
         [HttpPost("product-image")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadProductImage(IFormFile file, CancellationToken ct)
+        public async Task<IActionResult> UploadProductImage([FromForm] IFormFile file, CancellationToken ct)
         {
             return await UploadFile(file, FileType.ProductImage, ct);
         }
 
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload(IFormFile file, [FromQuery] FileType type, CancellationToken ct)
+        public async Task<IActionResult> Upload([FromForm] IFormFile file, [FromQuery] FileType type, CancellationToken ct)
         {
             return await UploadFile(file, type, ct);
         }
